@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserProfileType {
+  CLIENT
+  ARTIST
+  BUSINESS
+}
+
+enum UserRoleEnum {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+model User {
+  id                  Int                       @id @default(autoincrement())
+  email               String                    @unique
+  password            String
+  name                String
+  profileType         UserProfileType
+  status              UserStatus                @default(INACTIVE)
+  deletedAt           DateTime?
+  roles               UserRole[]
+  verificationToken   UserVerificationToken?    @relation("UserVerificationTokenToUser")
+  Establishment       Establishment[]
+  createdAt          DateTime @default(now())  // Certifique-se de que isto esteja aqui
+  updatedAt          DateTime @updatedAt        // Certifique-se de que isto esteja aqui
+
+  @@map("users")
+}
+
+model UserVerificationToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  userId    Int      @unique
+  user      User     @relation("UserVerificationTokenToUser", fields: [userId], references: [id])
+
+  @@map("user_verification_tokens")
+}
+
+model Role {
+  id    Int      @id @default(autoincrement())
+  name  String   @unique
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId Int
+  roleId Int
+  user   User @relation(fields: [userId], references: [id])
+  role   Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Artist {
+  id              Int      @id @default(autoincrement())
+  name            String
+  genre           String
+  bio             String?
+  establishmentId Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  establishment Establishment @relation(fields: [establishmentId], references: [id])
+
+  @@map("artists")
+}
+
+model Establishment {
+  id            Int      @id @default(autoincrement())
+  name          String
+  address       String?
+  contact       String?
+  primaryOwnerId Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  artists     Artist[]
+  primaryOwner User     @relation(fields: [primaryOwnerId], references: [id])
+
+  @@map("establishments")
+}
