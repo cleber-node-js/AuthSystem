@@ -1,9 +1,7 @@
-// src/controllers/userVerificationToken.controller.ts
 import { Request, Response } from 'express';
-import { UserVerificationTokenService } from './userVerificationToken.service';
+import { UserVerificationTokenService } from '../services/userVerificationToken.service';
 
 class UserVerificationTokenController {
-
     private readonly userVerificationTokenService = new UserVerificationTokenService();
 
     async create(req: Request, res: Response) {
@@ -12,7 +10,7 @@ class UserVerificationTokenController {
             const userVerificationToken = await this.userVerificationTokenService.createToken(userId, token, expiresAt);
             res.status(201).json(userVerificationToken);
         } catch (error) {
-            res.status(400).json({ message: error.message || 'Bad Request' });
+            res.status(400).json({ message: (error as any).message || 'Bad Request' });
         }
     }
 
@@ -52,7 +50,9 @@ class UserVerificationTokenController {
             const isValid = await this.userVerificationTokenService.verifyToken(token);
             res.json({ isValid });
         } catch (error) {
-            res.status(500).json({ message: error.message || 'Internal Server Error' });
+            res.status(500).json({ message: (error as any).message || 'Internal Server Error' });
         }
     }
 }
+
+export default UserVerificationTokenController;

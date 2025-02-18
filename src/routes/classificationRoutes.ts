@@ -1,13 +1,24 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { ClassificationController } from '../controllers/ClassificationController';
 
 const router = Router();
 const classificationController = new ClassificationController();
 
-router.post('/', classificationController.createClassification.bind(classificationController));
-router.get('/', classificationController.getAllClassifications.bind(classificationController));
-router.get('/:id', classificationController.getClassificationById.bind(classificationController));
-router.put('/:id', classificationController.updateClassification.bind(classificationController));
-router.delete('/:id', classificationController.deleteClassification.bind(classificationController));
+// Rotas ajustadas com funções anônimas e middlewares
+router.post('/', (req: Request, res: Response, next: NextFunction) => {
+  classificationController.createClassification(req, res).catch(next);
+});
+router.get('/', (req: Request, res: Response, next: NextFunction) => {
+  classificationController.getAllClassifications(req, res).catch(next);
+});
+router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
+  classificationController.getClassificationById(req, res).catch(next);
+});
+router.put('/:id', (req: Request, res: Response, next: NextFunction) => {
+  classificationController.updateClassification(req, res).catch(next);
+});
+router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
+  classificationController.deleteClassification(req, res).catch(next);
+});
 
 export default router;

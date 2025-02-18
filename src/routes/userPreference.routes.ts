@@ -1,4 +1,3 @@
-// src/routes/userPreference.routes.ts
 import { Router } from 'express';
 import { UserPreferenceController } from '../controllers/userPreference.controller';
 

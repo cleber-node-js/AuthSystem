@@ -11,7 +11,8 @@ import classificationRoutes from './routes/classificationRoutes';
 import ratingRoutes from './routes/ratingRoutes';
 import userRoleRoutes from './routes/userRoleRoutes';
 import { authRoutes } from './routes/authRoutes';
-import userPreferenceRoutes from './routes/userPreference.routes'; 
+import userPreferenceRoutes from './routes/userPreference.routes';
+import userVerificationTokenRoutes from './routes/userVerificationTokenRoutes'
 
 dotenv.config();
 
@@ -35,7 +36,8 @@ app.use('/favorites', favoriteRoutes);
 app.use('/classifications', classificationRoutes);
 app.use('/ratings', ratingRoutes);
 app.use('/user-roles', userRoleRoutes);
-app.use(userPreferenceRoutes);
+app.use('/api', userPreferenceRoutes);
+app.use('/api', userVerificationTokenRoutes);
 
 // Tratamento de erros
 const errorHandler: ErrorRequestHandler = (err, _req: Request, res: Response, _next: NextFunction) => {

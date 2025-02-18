@@ -10,7 +10,7 @@ export class EstablishmentController {
       const { name, address, contact, primaryOwnerId } = req.body; // Incluído address e contact
       const establishment = await establishmentService.createEstablishment(name, address, contact, primaryOwnerId);
       return res.status(201).json(establishment);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ Erro ao criar estabelecimento:`, error);
       return res.status(500).json({ error: 'Erro ao criar estabelecimento.' });
     }
@@ -31,7 +31,7 @@ export class EstablishmentController {
         return res.status(404).json({ error: 'Estabelecimento não encontrado.' });
       }
       return res.status(200).json(establishment);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ Erro ao obter estabelecimento ID ${establishmentId}:`, error);
       return res.status(500).json({ error: 'Erro ao obter estabelecimento.' });
     }
@@ -42,7 +42,7 @@ export class EstablishmentController {
     try {
       const establishments = await establishmentService.getAllEstablishments();
       return res.status(200).json(establishments);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ Erro ao obter estabelecimentos:`, error);
       return res.status(500).json({ error: 'Erro ao obter estabelecimentos.' });
     }
@@ -60,7 +60,7 @@ export class EstablishmentController {
     try {
       const updatedEstablishment = await establishmentService.updateEstablishment(establishmentId, data);
       return res.status(200).json(updatedEstablishment);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ Erro ao atualizar estabelecimento ID ${establishmentId}:`, error);
       return res.status(500).json({ error: 'Erro ao atualizar estabelecimento.' });
     }
@@ -77,7 +77,7 @@ export class EstablishmentController {
     try {
       const deletedEstablishment = await establishmentService.deleteEstablishment(establishmentId);
       return res.status(200).json({ message: 'Estabelecimento excluído com sucesso.', establishment: deletedEstablishment });
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ Erro ao excluir estabelecimento ID ${establishmentId}:`, error);
       return res.status(500).json({ error: 'Erro ao excluir estabelecimento.' });
     }
