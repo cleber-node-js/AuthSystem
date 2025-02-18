@@ -23,7 +23,7 @@ export class UserPreferenceController {
             const userPreference = await this.userPreferenceService.createPreferences(userId, interests, favoriteCategories);
             res.status(201).json(userPreference);
         } catch (error) {
-            res.status(400).json({ message: error.message || 'Bad Request' });
+            res.status(400).json({ message: (error as any).message || 'Bad Request' });
         }
     }
 

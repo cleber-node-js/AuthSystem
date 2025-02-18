@@ -1,13 +1,24 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { UserController } from '../controllers/UserController';
 
 const router = Router();
 const userController = new UserController();
 
-router.post('/users/register', userController.register.bind(userController));
-router.get('/users', userController.getAllUsers.bind(userController));
-router.get('/users/:id', userController.getUser.bind(userController));
-router.put('/users/:id', userController.updateUser.bind(userController));
-router.delete('/users/:id', userController.deleteUser.bind(userController));
+// Ajuste das Rotas com Funções Anônimas
+router.post('/users/register', (req: Request, res: Response, next: NextFunction) => {
+  userController.register(req, res).catch(next);
+});
+router.get('/users', (req: Request, res: Response, next: NextFunction) => {
+  userController.getAllUsers(req, res).catch(next);
+});
+router.get('/users/:id', (req: Request, res: Response, next: NextFunction) => {
+  userController.getUser(req, res).catch(next);
+});
+router.put('/users/:id', (req: Request, res: Response, next: NextFunction) => {
+  userController.updateUser(req, res).catch(next);
+});
+router.delete('/users/:id', (req: Request, res: Response, next: NextFunction) => {
+  userController.deleteUser(req, res).catch(next);
+});
 
 export default router;

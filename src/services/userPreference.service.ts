@@ -1,4 +1,3 @@
-// src/services/userPreference.service.ts
 import { PrismaClient, UserPreference } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -6,9 +5,10 @@ const prisma = new PrismaClient();
 export class UserPreferenceService {
 
     async getPreferencesByUserId(userId: number): Promise<UserPreference | null> {
-        return prisma.userPreference.findUnique({
-            where: { userId }, // Corrigido para buscar por userId
+        const userPreference = await prisma.userPreference.findFirst({
+            where: { userId }, // Buscar por userId usando findFirst
         });
+        return userPreference;
     }
 
     async createPreferences(
@@ -26,18 +26,18 @@ export class UserPreferenceService {
     }
 
     async updatePreferences(
-        userId: number,
+        id: number,
         data: Partial<Omit<UserPreference, 'id' | 'createdAt'>>,
     ): Promise<UserPreference | null> {
         return prisma.userPreference.update({
-            where: { userId },
+            where: { id }, // Usando id para a chave única
             data,
         });
     }
 
-    async deletePreferences(userId: number): Promise<void> { // Retorna void, pois não precisa retornar a preferencia deletada.
+    async deletePreferences(id: number): Promise<void> { // Retorna void, pois não precisa retornar a preferencia deletada.
         await prisma.userPreference.delete({
-            where: { userId },
+            where: { id }, // Usando id para a chave única
         });
     }
 }

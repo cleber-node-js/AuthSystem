@@ -10,8 +10,6 @@ export class ArtistController {
       const artist = await artistService.createArtist(name, establishmentId, genre, bio);
       
       console.log(`✅ Artista criado: ${JSON.stringify(artist, null, 2)}`);
-      console.log(`Resposta enviada: ${JSON.stringify(artist, null, 2)}`);
-      
       return res.status(201).json(artist);
     } catch (error) {
       console.error(`❌ Erro ao criar artista:`, error);
@@ -48,8 +46,6 @@ export class ArtistController {
     try {
       const artists = await artistService.getAllArtists();
       console.log(`✅ ${artists.length} artistas encontrados.`);
-      console.log(`Resposta enviada: ${JSON.stringify(artists, null, 2)}`);
-      
       return res.status(200).json(artists);
     } catch (error) {
       console.error(`❌ Erro ao obter artistas:`, error);
@@ -68,8 +64,6 @@ export class ArtistController {
     try {
       const updatedArtist = await artistService.updateArtist(artistId, data);
       console.log(`✅ Artista atualizado: ${JSON.stringify(updatedArtist, null, 2)}`);
-      console.log(`Resposta enviada: ${JSON.stringify(updatedArtist, null, 2)}`);
-      
       return res.status(200).json(updatedArtist);
     } catch (error) {
       console.error(`❌ Erro ao atualizar artista ID ${artistId}:`, error);
@@ -87,8 +81,6 @@ export class ArtistController {
     try {
       const deletedArtist = await artistService.deleteArtist(artistId);
       console.log(`✅ Artista excluído: ${JSON.stringify(deletedArtist, null, 2)}`);
-      console.log(`Resposta enviada: { message: 'Artista excluído com sucesso.', artist: ${JSON.stringify(deletedArtist, null, 2)}}`);
-      
       return res.status(200).json({ message: 'Artista excluído com sucesso.', artist: deletedArtist });
     } catch (error) {
       console.error(`❌ Erro ao excluir artista ID ${artistId}:`, error);

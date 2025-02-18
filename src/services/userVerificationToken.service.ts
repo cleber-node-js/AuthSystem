@@ -1,10 +1,8 @@
-// src/services/userVerificationToken.service.ts
 import { PrismaClient, UserVerificationToken } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 export class UserVerificationTokenService {
-
     async createToken(userId: number, token: string, expiresAt: Date): Promise<UserVerificationToken> {
         return prisma.userVerificationToken.create({
             data: {
@@ -27,7 +25,7 @@ export class UserVerificationTokenService {
         });
     }
 
-    async deleteToken(userId: number): Promise<void> { // Retorna void, pois não precisa retornar o token deletado.
+    async deleteToken(userId: number): Promise<void> {
         await prisma.userVerificationToken.deleteMany({
             where: { userId },
         });
