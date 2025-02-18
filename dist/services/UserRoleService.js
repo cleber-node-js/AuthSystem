@@ -1,52 +1,38 @@
-import { PrismaClient, UserRole } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-export class UserRoleService {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserRoleService = void 0;
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
+class UserRoleService {
     // Criar uma nova associação UserRole
-    async createUserRole(userId: number, roleId: number): Promise<UserRole | null> {
+    async createUserRole(userId, roleId) {
         try {
-            // Verificar se a associação já existe
-            const existingUserRole = await prisma.userRole.findUnique({
-                where: {
-                    userId_roleId: {
-                        userId,
-                        roleId,
-                    },
-                },
-            });
-
-            if (existingUserRole) {
-                console.warn('UserRole association already exists.');
-                return null; // Ou lance um erro, se apropriado
-            }
-
-            // Criar uma nova associação UserRole
-            return await prisma.userRole.create({
+            const userRole = await prisma.userRole.create({
                 data: {
                     userId,
                     roleId,
                 },
             });
-        } catch (error) {
+            return userRole;
+        }
+        catch (error) {
             console.error("Error creating user role:", error);
             throw error; // Re-lançar o erro para ser tratado no controller
         }
     }
-
     // Buscar todas as associações UserRole
-    async getAllUserRoles(): Promise<UserRole[]> {
+    async getAllUserRoles() {
         try {
             const userRoles = await prisma.userRole.findMany();
             return userRoles;
-        } catch (error) {
+        }
+        catch (error) {
             console.error("Error fetching user roles:", error);
             throw error;
         }
     }
-
     // Buscar uma associação UserRole por ID
-    async getUserRoleById(id: number): Promise<UserRole | null> {
+    async getUserRoleById(id) {
         try {
             const userRole = await prisma.userRole.findUnique({
                 where: {
@@ -54,14 +40,14 @@ export class UserRoleService {
                 },
             });
             return userRole;
-        } catch (error) {
+        }
+        catch (error) {
             console.error("Error fetching user role by ID:", error);
             throw error;
         }
     }
-
     // Atualizar uma associação UserRole
-    async updateUserRole(id: number, userId: number, roleId: number): Promise<UserRole> {
+    async updateUserRole(id, userId, roleId) {
         try {
             const updatedUserRole = await prisma.userRole.update({
                 where: {
@@ -73,14 +59,14 @@ export class UserRoleService {
                 },
             });
             return updatedUserRole;
-        } catch (error) {
+        }
+        catch (error) {
             console.error("Error updating user role:", error);
             throw error;
         }
     }
-
     // Deletar uma associação UserRole
-    async deleteUserRole(id: number): Promise<UserRole> {
+    async deleteUserRole(id) {
         try {
             const deletedUserRole = await prisma.userRole.delete({
                 where: {
@@ -88,9 +74,12 @@ export class UserRoleService {
                 },
             });
             return deletedUserRole;
-        } catch (error) {
+        }
+        catch (error) {
             console.error("Error deleting user role:", error);
             throw error;
         }
     }
 }
+exports.UserRoleService = UserRoleService;
+//# sourceMappingURL=UserRoleService.js.map
