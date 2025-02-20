@@ -36,7 +36,7 @@ export class AuthService {
                 email,
                 password: hashedPassword,
                 name: 'Default Name',
-                profileType: 'DEFAULT' as UserProfileType, // Assign the correct value to profileType
+                profileType: 'DEFAULT' as UserProfileType,
                 status: 'ACTIVE',
                 createdAt: new Date(),
                 updatedAt: new Date(),

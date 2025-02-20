@@ -4,23 +4,32 @@ exports.UserRoleService = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 class UserRoleService {
-    // Criar uma nova associação UserRole
     async createUserRole(userId, roleId) {
         try {
-            const userRole = await prisma.userRole.create({
+            const existingUserRole = await prisma.userRole.findUnique({
+                where: {
+                    userId_roleId: {
+                        userId,
+                        roleId,
+                    },
+                },
+            });
+            if (existingUserRole) {
+                console.warn('UserRole association already exists.');
+                return null;
+            }
+            return await prisma.userRole.create({
                 data: {
                     userId,
                     roleId,
                 },
             });
-            return userRole;
         }
         catch (error) {
             console.error("Error creating user role:", error);
-            throw error; // Re-lançar o erro para ser tratado no controller
+            throw error;
         }
     }
-    // Buscar todas as associações UserRole
     async getAllUserRoles() {
         try {
             const userRoles = await prisma.userRole.findMany();
@@ -31,12 +40,14 @@ class UserRoleService {
             throw error;
         }
     }
-    // Buscar uma associação UserRole por ID
-    async getUserRoleById(id) {
+    async getUserRoleById(userId, roleId) {
         try {
             const userRole = await prisma.userRole.findUnique({
                 where: {
-                    id: id,
+                    userId_roleId: {
+                        userId,
+                        roleId,
+                    },
                 },
             });
             return userRole;
@@ -46,16 +57,18 @@ class UserRoleService {
             throw error;
         }
     }
-    // Atualizar uma associação UserRole
-    async updateUserRole(id, userId, roleId) {
+    async updateUserRole(userId, roleId, newUserId, newRoleId) {
         try {
             const updatedUserRole = await prisma.userRole.update({
                 where: {
-                    id: id,
+                    userId_roleId: {
+                        userId,
+                        roleId,
+                    },
                 },
                 data: {
-                    userId,
-                    roleId,
+                    userId: newUserId,
+                    roleId: newRoleId,
                 },
             });
             return updatedUserRole;
@@ -65,12 +78,14 @@ class UserRoleService {
             throw error;
         }
     }
-    // Deletar uma associação UserRole
-    async deleteUserRole(id) {
+    async deleteUserRole(userId, roleId) {
         try {
             const deletedUserRole = await prisma.userRole.delete({
                 where: {
-                    id: id,
+                    userId_roleId: {
+                        userId,
+                        roleId,
+                    },
                 },
             });
             return deletedUserRole;

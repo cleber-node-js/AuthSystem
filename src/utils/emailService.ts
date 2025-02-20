@@ -1,5 +1,3 @@
-// utils/emailService.ts
-
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 

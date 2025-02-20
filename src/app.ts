@@ -12,8 +12,9 @@ import ratingRoutes from './routes/ratingRoutes';
 import userRoleRoutes from './routes/userRoleRoutes';
 import { authRoutes } from './routes/authRoutes';
 import userPreferenceRoutes from './routes/userPreference.routes';
-import userVerificationTokenRoutes from './routes/userVerificationTokenRoutes'
-
+import userVerificationTokenRoutes from './routes/userVerificationTokenRoutes';
+import notificationRoutes from './routes/notification.routes';
+import paymentRoutes from './routes/payment.routes';
 dotenv.config();
 
 const app = express();
@@ -38,6 +39,8 @@ app.use('/ratings', ratingRoutes);
 app.use('/user-roles', userRoleRoutes);
 app.use('/api', userPreferenceRoutes);
 app.use('/api', userVerificationTokenRoutes);
+app.use('/api', notificationRoutes);
+app.use('/api', paymentRoutes);
 
 // Tratamento de erros
 const errorHandler: ErrorRequestHandler = (err, _req: Request, res: Response, _next: NextFunction) => {

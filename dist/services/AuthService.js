@@ -34,7 +34,7 @@ class AuthService {
                 email,
                 password: hashedPassword,
                 name: 'Default Name',
-                profileType: 'DEFAULT', // Assign the correct value to profileType
+                profileType: 'DEFAULT',
                 status: 'ACTIVE',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -82,6 +82,7 @@ class AuthService {
                 updatedAt: true,
                 password: true, // Incluído para evitar erros de tipagem
                 deletedAt: true, // Incluído para evitar erros de tipagem
+                phone: true, // Add the 'phone' property
                 roles: {
                     include: {
                         role: true,
