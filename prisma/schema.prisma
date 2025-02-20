@@ -14,6 +14,7 @@ enum UserProfileType {
   USER
   ARTIST
   BUSINESS
+  DEFAULT
 }
 
 enum UserRoleEnum {
@@ -26,6 +27,27 @@ enum UserStatus {
   BLOCKED
   INACTIVE
   BANNED
+}
+
+enum NotificationCategory {
+  EVENT_REMINDER
+  NEW_PROMOTION
+  AD_STATUS_UPDATE
+  CONTRACT_STATUS_UPDATE
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  REFUNDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELED
+  PAST_DUE
 }
 
 model User {
@@ -49,6 +71,12 @@ model User {
   establishments          Establishment[]
 
   UserVerificationToken UserVerificationToken[]
+
+  Notification Notification[]
+
+  Transaction Transaction[]
+
+  Subscription Subscription[]
 }
 
 model Session {
@@ -147,6 +175,9 @@ model Artist {
 
   @@map("artists")
   events Event[] @relation("ArtistEvents")
+  Notification Notification[]
+  Transaction Transaction[]
+  Subscription Subscription[]
 }
 
 model Event {
@@ -180,4 +211,70 @@ model Establishment {
 
   @@map("establishments")
   events Event[]
+  Notification Notification[]
+  Transaction Transaction[]
+  Subscription Subscription[]
 }
+
+model Notification {
+  id           Int                  @id @default(autoincrement())
+  userId       Int?                 // User that receives the notification.  Can be null if not user-specific.
+  artistId     Int?                 // Artist that receives the notification.  Can be null if not artist-specific.
+  establishmentId Int?            // Establishment that receives the notification.  Can be null if not establishment-specific.
+  category     NotificationCategory // Enum for notification type
+  title        String               @db.VarChar(255) // Title of the notification
+  content      String               @db.Text           // Content of the notification.
+  read         Boolean              @default(false)   // Has the user read the notification?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  // Relations (Optional - based on your specific logic)
+  user           User?            @relation(fields: [userId], references: [id])
+  artist         Artist?          @relation(fields: [artistId], references: [id])
+  establishment  Establishment?   @relation(fields: [establishmentId], references: [id])
+}
+
+model Transaction {
+  id               Int      @id @default(autoincrement())
+  userId           Int?
+  artistId         Int?
+  establishmentId  Int?
+  subscriptionId   Int?
+  amount           Float
+  currency         String
+  paymentMethod    String
+  transactionId    String   @unique
+  status           String   // 'pending', 'approved', 'declined', 'refunded'
+  receiptUrl       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user            User?          @relation(fields: [userId], references: [id])
+  artist          Artist?        @relation(fields: [artistId], references: [id])
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id])
+  subscription    Subscription?  @relation(fields: [subscriptionId], references: [id])
+}
+
+
+model Subscription {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  artistId         Int?
+  establishmentId  Int?
+  planId           Int
+  plan             String
+  startDate        DateTime
+  endDate          DateTime
+  status           String    // 'active', 'inactive', 'canceled', 'past_due'
+  nextPaymentDate  DateTime?
+  amount           Float
+  currency         String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user            User           @relation(fields: [userId], references: [id])
+  artist          Artist?        @relation(fields: [artistId], references: [id])
+  establishment   Establishment? @relation(fields: [establishmentId], references: [id])
+  transactions    Transaction[]
+}
+
