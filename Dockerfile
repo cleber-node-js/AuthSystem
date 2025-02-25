@@ -1,7 +1,8 @@
 FROM node:18-alpine
 
 # Set the working directory
-WORKDIR  mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+WORKDIR /home/node/app/node_modules
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
