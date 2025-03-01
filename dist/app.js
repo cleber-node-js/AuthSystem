@@ -20,7 +20,7 @@ const authRoutes_1 = require("./routes/authRoutes");
 const userPreference_routes_1 = __importDefault(require("./routes/userPreference.routes"));
 const userVerificationTokenRoutes_1 = __importDefault(require("./routes/userVerificationTokenRoutes"));
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
-const payment_routes_1 = __importDefault(require("./routes/payment.routes"));
+//import paymentRoutes from './routes/payment.routes';
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -42,7 +42,7 @@ app.use('/user-roles', userRoleRoutes_1.default);
 app.use('/api', userPreference_routes_1.default);
 app.use('/api', userVerificationTokenRoutes_1.default);
 app.use('/api', notification_routes_1.default);
-app.use('/api', payment_routes_1.default);
+//app.use('/api', paymentRoutes);
 // Tratamento de erros
 const errorHandler = (err, _req, res, _next) => {
     console.error('❌ Erro:', err);

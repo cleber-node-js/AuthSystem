@@ -7,7 +7,9 @@
     "outDir": "dist",
     "strict": true,
     "sourceMap": true,
-    "lib": ["ES2018", "DOM"]
+    "lib": ["ES2018", "DOM"],
+    "typeRoots": ["node_modules/@types"],
+    "skipLibCheck": true // Esta opção ignora a checagem de tipos em arquivos de declaração
   },
   "include": ["src/**/*", "prisma/**/*"],
   "exclude": ["node_modules"]

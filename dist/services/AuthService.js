@@ -13,22 +13,23 @@ const prisma = new client_1.PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 class AuthService {
     async register(email, password, role) {
+        // Lista de roles válidas
+        const validRoles = ['USER', 'ADMIN'];
+        // Normaliza e verifica se o role é válido
+        const normalizedRole = role.trim().toUpperCase();
+        if (!validRoles.includes(normalizedRole)) {
+            throw new Error('Role not found');
+        }
+        // Verifica se o usuário já existe
         const existingUser = await prisma.user.findUnique({
             where: { email },
         });
         if (existingUser) {
             throw new Error('User already exists');
         }
+        // Criptografa a senha
         const hashedPassword = await bcrypt_1.default.hash(password, 10);
-        if (!role) {
-            throw new Error('Role is required');
-        }
-        const roleEnum = await prisma.role.findUnique({
-            where: { name: role.trim().toUpperCase() },
-        });
-        if (!roleEnum) {
-            throw new Error('Role not found');
-        }
+        // Cria o usuário com a role
         const user = await prisma.user.create({
             data: {
                 email,
@@ -41,12 +42,17 @@ class AuthService {
                 deletedAt: null,
                 roles: {
                     create: {
-                        roleId: roleEnum.id,
+                        role: {
+                            connectOrCreate: {
+                                where: { name: normalizedRole },
+                                create: { name: normalizedRole },
+                            },
+                        },
                     },
                 },
             },
         });
-        console.info(`New user created: ${email}, role: ${roleEnum.name}`);
+        console.info(`New user created: ${email}, role: ${normalizedRole}`);
         return user;
     }
     async login(email, password) {
