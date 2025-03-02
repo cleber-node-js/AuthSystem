@@ -1,16 +1,22 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "outDir": "dist",
-    "strict": true,
-    "sourceMap": true,
-    "lib": ["ES2018", "DOM"],
-    "typeRoots": ["node_modules/@types"],
-    "skipLibCheck": true // Esta opção ignora a checagem de tipos em arquivos de declaração
+    "target": "es2018",                          // Continua com o alvo ES2018
+    "module": "commonjs",                        // Módulo CommonJS
+    "moduleResolution": "node",                  // Resolução de módulos compatível com Node.js
+    "esModuleInterop": true,                     // Interoperabilidade com módulos ES
+    "outDir": "dist",                            // Diretório de saída
+    "strict": true,                              // Habilita todas as verificações estritas
+    "sourceMap": true,                           // Geração de mapas de origem
+    "lib": ["ES2018", "DOM"],                    // Definir bibliotecas de tipo necessárias
+    "typeRoots": ["node_modules/@types"],        // Diretório onde tipos estão localizados
+    "skipLibCheck": true,                        // Ignora verificação de tipo nas bibliotecas
+    "resolveJsonModule": true,                   // Permite importar arquivos JSON como módulos
+    "forceConsistentCasingInFileNames": true     // Força o uso consistente de maiúsculas/minúsculas no nome de arquivos
   },
-  "include": ["src/**/*", "prisma/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+      "src/**/*"                                   // Inclui todos os arquivos dentro da pasta src
+  ],
+  "exclude": [
+    "node_modules"                               // Exclui a pasta node_modules
+  ]
 }
