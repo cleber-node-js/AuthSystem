@@ -43,6 +43,9 @@ app.use('/api', userPreference_routes_1.default);
 app.use('/api', userVerificationTokenRoutes_1.default);
 app.use('/api', notification_routes_1.default);
 //app.use('/api', paymentRoutes);
+app.get('/', (_req, res) => {
+    res.send('API rodando no subdomínio api.bizzinpro.com.br!');
+});
 // Tratamento de erros
 const errorHandler = (err, _req, res, _next) => {
     console.error('❌ Erro:', err);
