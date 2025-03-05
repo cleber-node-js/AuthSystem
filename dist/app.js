@@ -4,9 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.app = void 0;
+require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const dotenv_1 = __importDefault(require("dotenv"));
 const sessionRoutes_1 = __importDefault(require("./routes/sessionRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const artistRoutes_1 = __importDefault(require("./routes/artistRoutes"));
@@ -20,8 +20,6 @@ const authRoutes_1 = require("./routes/authRoutes");
 const userPreference_routes_1 = __importDefault(require("./routes/userPreference.routes"));
 const userVerificationTokenRoutes_1 = __importDefault(require("./routes/userVerificationTokenRoutes"));
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
-//import paymentRoutes from './routes/payment.routes';
-dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
 app.use(express_1.default.json());
@@ -32,7 +30,7 @@ app.use('/api', artistRoutes_1.default);
 app.use('/api', establishment_routes_1.default);
 // Rotas que não precisam de autenticação
 app.use('/auth', authRoutes_1.authRoutes); // Rotas de autenticação (register, login)
-//Rotas que não pertencem ao api
+// Rotas que não pertencem ao api
 app.use('/sessions', sessionRoutes_1.default);
 app.use('/events', eventRoutes_1.default);
 app.use('/favorites', favoriteRoutes_1.default);
@@ -42,14 +40,13 @@ app.use('/user-roles', userRoleRoutes_1.default);
 app.use('/api', userPreference_routes_1.default);
 app.use('/api', userVerificationTokenRoutes_1.default);
 app.use('/api', notification_routes_1.default);
-//app.use('/api', paymentRoutes);
 app.get('/', (_req, res) => {
     res.send('API rodando no subdomínio api.bizzinpro.com.br!');
 });
 // Tratamento de erros
 const errorHandler = (err, _req, res, _next) => {
     console.error('❌ Erro:', err);
-    res.status(500).json({ message: 'Erro interno no servidor' });
+    res.status(500).json({ message: 'Erro interno no servidor', error: err.message });
 };
 app.use(errorHandler);
 //# sourceMappingURL=app.js.map

@@ -1,12 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-require("dotenv/config");
-const app_1 = require("./app");
 const client_1 = require("@prisma/client");
+const app_1 = require("./app");
 const prisma = new client_1.PrismaClient();
-const PORT = process.env.PORT || 3005;
+const PORT = process.env.PORT || 3008;
 app_1.app.listen(PORT, async () => {
-    await prisma.$connect();
-    console.log(`Server is running on http://localhost:${PORT}`);
+    try {
+        await prisma.$connect();
+        console.log(`Server is running on http://localhost:${PORT}`);
+    }
+    catch (error) {
+        console.error('❌ Error connecting to the database', error);
+    }
 });
 //# sourceMappingURL=server.js.map
