@@ -1,14 +1,13 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Set the working directory
-WORKDIR /home/node/app/node_modules
-RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+WORKDIR /home/node/app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install -g npm@11.2.0 && npm ci
 
 # Copy the rest of the app
 COPY --chown=node:node . .
