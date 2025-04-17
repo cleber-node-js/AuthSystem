@@ -1,18 +1,18 @@
 import 'dotenv/config';
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import cors from 'cors';
-import sessionRoutes from './routes/sessionRoutes';
-import userRoutes from './routes/userRoutes';
-import artistRoutes from './routes/artistRoutes';
+import sessionRoutes from './routes/session.routes';
+import userRoutes from './routes/user.routes';
+import artistRoutes from './routes/artist.routes';
 import establishmentRoutes from './routes/establishment.routes';
-import eventRoutes from './routes/eventRoutes';
-import favoriteRoutes from './routes/favoriteRoutes';
-import classificationRoutes from './routes/classificationRoutes';
-import ratingRoutes from './routes/ratingRoutes';
-import userRoleRoutes from './routes/userRoleRoutes';
-import { authRoutes } from './routes/authRoutes';
+import eventRoutes from './routes/event.routes';
+import favoriteRoutes from './routes/favorite.routes';
+import classificationRoutes from './routes/classification.routes';
+import ratingRoutes from './routes/rating.routes';
+import userRoleRoutes from './routes/userRole.routes';
+import { authRoutes } from './routes/auth.routes';
 import userPreferenceRoutes from './routes/userPreference.routes';
-import userVerificationTokenRoutes from './routes/userVerificationTokenRoutes';
+import userVerificationTokenRoutes from './routes/userVerificationToken.routes';
 import notificationRoutes from './routes/notification.routes';
 
 const app = express();

@@ -18,15 +18,26 @@ enum UserProfileType {
 }
 
 enum UserRoleEnum {
+  ARTIST
+  BUSINESS
   USER
   ADMIN
+  CLIENT  // Adicione essa linha
 }
 
 enum UserStatus {
   ACTIVE
+  PENDING
   BLOCKED
   INACTIVE
   BANNED
+}
+
+enum ArtistStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
 }
 
 enum NotificationCategory {
@@ -51,24 +62,24 @@ enum SubscriptionStatus {
 }
 
 model User {
-  id                      Int                     @id @default(autoincrement())
-  name                    String                  @db.VarChar(100)
-  email                   String                  @unique @db.VarChar(100)
-  phone                   String?                 @unique @db.VarChar(15)
-  password                String                  @db.VarChar(255)
-  profileType             UserProfileType         @default(CLIENT)
-  status                  UserStatus              @default(ACTIVE)
-  verificationTokens      UserVerificationToken[] @relation("UserVerificationTokenToUser")
-  preferences             UserPreference[]
-  favorites               Favorite[]
-  classifications         Classification[]
-  sessions                Session[]
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @default(now())
-  deletedAt               DateTime?
-  roles                   UserRole[]              // Relationship with UserRole
-  ratings                 Rating[]                // Consider renaming if relevant
-  establishments          Establishment[]
+  id                 Int                     @id @default(autoincrement())
+  name               String                  @db.VarChar(100)
+  email              String                  @unique @db.VarChar(100)
+  phone              String?                 @unique @db.VarChar(15)
+  password           String                  @db.VarChar(255)
+  profileType        UserProfileType         @default(CLIENT) // Define CLIENT como padrão
+  status             UserStatus              @default(ACTIVE)
+  verificationTokens UserVerificationToken[] @relation("UserVerificationTokenToUser")
+  preferences        UserPreference[]
+  favorites          Favorite[]
+  classifications    Classification[]
+  sessions           Session[]
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @default(now())
+  deletedAt          DateTime?
+  roles              UserRole[] // Relacionamento com UserRole
+  ratings            Rating[] // Considerando renomear se necessário
+  establishments     Establishment[]
 
   UserVerificationToken UserVerificationToken[]
 
@@ -90,13 +101,13 @@ model Session {
 }
 
 model Classification {
-  id        Int    @id @default(autoincrement())
-  userId    Int
-  eventId   Int
-  score     Int
-  comment   String? @db.VarChar(500)
-  user      User   @relation(fields: [userId], references: [id])
-  event     Event  @relation(fields: [eventId], references: [id])
+  id      Int     @id @default(autoincrement())
+  userId  Int
+  eventId Int
+  score   Int
+  comment String? @db.VarChar(500)
+  user    User    @relation(fields: [userId], references: [id])
+  event   Event   @relation(fields: [eventId], references: [id])
 
   createdAt DateTime @default(now())
 }
@@ -112,169 +123,186 @@ model UserPreference {
 }
 
 model Favorite {
-  id        Int    @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
   eventId   Int
   createdAt DateTime @default(now())
+  Event     Event[]
+  User      User[]
 
   @@unique([userId, eventId]) // Define a chave única composta
-  Event Event[]
-  User User[]
 }
 
 model Rating {
-  id        Int    @id @default(autoincrement())
-  eventId   Int
-  userId    Int
-  score     Int
-  comment   String? @db.VarChar(500)
-  event     Event  @relation(fields: [eventId], references: [id])
-  user      User   @relation(fields: [userId], references: [id])
+  id      Int     @id @default(autoincrement())
+  eventId Int
+  userId  Int
+  score   Int
+  comment String? @db.VarChar(500)
+  event   Event   @relation(fields: [eventId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
 }
 
 model UserVerificationToken {
-  id         Int    @id @default(autoincrement())
-  userId     Int    @unique
-  token      String @unique @db.VarChar(255)
-  createdAt  DateTime @default(now())
-  expiresAt  DateTime
-  user       User @relation(fields: [userId], references: [id])
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  token     String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id])
 
   User User[] @relation("UserVerificationTokenToUser")
 }
 
 model Role {
-  id    Int      @id @default(autoincrement())
-  name  String   @unique
+  id    Int        @id @default(autoincrement())
+  name  String     @unique
   users UserRole[]
 
   @@map("roles")
 }
 
 model UserRole {
+  id     Int  @id @default(autoincrement())
   userId Int
   roleId Int
-  user   User @relation(fields: [userId], references: [id])
-  role   Role @relation(fields: [roleId], references: [id])
 
-  @@id([userId, roleId])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId]) // Evita papéis duplicados para o mesmo usuário
   @@map("user_roles")
 }
 
 model Artist {
-  id              Int      @id @default(autoincrement())
+  id              Int                   @id @default(autoincrement())
   name            String
-  genre           String
+  genre           String?
   bio             String?
-  establishmentId Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  establishment   Establishment @relation(fields: [establishmentId], references: [id])
+  status          ArtistStatus          @default(PENDING) 
+  imageUrl        String? 
+  approvalMessage String?
+  establishments  EstablishmentArtists[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
 
-  @@map("artists")
-  events Event[] @relation("ArtistEvents")
-  Notification Notification[]
-  Transaction Transaction[]
-  Subscription Subscription[]
+  events         Event[]        @relation("ArtistEvents")
+  notifications  Notification[]
+  transactions   Transaction[]
+  subscriptions  Subscription[]
 }
 
 model Event {
-  id            Int    @id @default(autoincrement())
-  name          String @db.VarChar(100)
-  description   String? @db.VarChar(500)
-  startDate     DateTime
-  endDate       DateTime
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(100)
+  description     String?          @db.VarChar(500)
+  startDate       DateTime
+  endDate         DateTime
   establishmentId Int
-  establishment Establishment @relation(fields: [establishmentId], references: [id])
-  favorites     Favorite[]
+  establishment   Establishment    @relation(fields: [establishmentId], references: [id])
+  favorites       Favorite[]
   classifications Classification[]
-  ratings       Rating[]
-  artists       Artist[] @relation("ArtistEvents")
+  ratings         Rating[]
+  artists         Artist[]         @relation("ArtistEvents")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
 
 model Establishment {
-  id            Int      @id @default(autoincrement())
-  name          String
-  address       String?
-  contact       String?
+  id             Int      @id @default(autoincrement())
+  name           String
+  address        String?
+  contact        String?
   primaryOwnerId Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  artists      Artist[]
-  primaryOwner User     @relation(fields: [primaryOwnerId], references: [id])
+  artists        EstablishmentArtists[]
+  primaryOwner User                  @relation(fields: [primaryOwnerId], references: [id])
+  events       Event[]
+  notifications Notification[]
+  transactions  Transaction[]
+  subscriptions Subscription[]
 
   @@map("establishments")
-  events Event[]
-  Notification Notification[]
-  Transaction Transaction[]
-  Subscription Subscription[]
+}
+
+model EstablishmentArtists {
+  artistId        Int
+  establishmentId Int
+  status          ArtistStatus @default(PENDING)
+  approvalMessage String?
+
+  artist        Artist        @relation(fields: [artistId], references: [id])
+  establishment Establishment @relation(fields: [establishmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([artistId, establishmentId])
+  @@map("establishment_artists") // Nome real da tabela no banco (opcional)
 }
 
 model Notification {
-  id           Int                  @id @default(autoincrement())
-  userId       Int?                 // User that receives the notification.  Can be null if not user-specific.
-  artistId     Int?                 // Artist that receives the notification.  Can be null if not artist-specific.
-  establishmentId Int?            // Establishment that receives the notification.  Can be null if not establishment-specific.
-  category     NotificationCategory // Enum for notification type
-  title        String               @db.VarChar(255) // Title of the notification
-  content      String               @db.Text           // Content of the notification.
-  read         Boolean              @default(false)   // Has the user read the notification?
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
+  id              Int                  @id @default(autoincrement())
+  userId          Int? // User that receives the notification.  Can be null if not user-specific.
+  artistId        Int? // Artist that receives the notification.  Can be null if not artist-specific.
+  establishmentId Int? // Establishment that receives the notification.  Can be null if not establishment-specific.
+  category        NotificationCategory // Enum for notification type
+  title           String               @db.VarChar(255) // Title of the notification
+  content         String               @db.Text // Content of the notification.
+  read            Boolean              @default(false) // Has the user read the notification?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   // Relations (Optional - based on your specific logic)
-  user           User?            @relation(fields: [userId], references: [id])
-  artist         Artist?          @relation(fields: [artistId], references: [id])
-  establishment  Establishment?   @relation(fields: [establishmentId], references: [id])
+  user          User?          @relation(fields: [userId], references: [id])
+  artist        Artist?        @relation(fields: [artistId], references: [id])
+  establishment Establishment? @relation(fields: [establishmentId], references: [id])
 }
 
 model Transaction {
-  id               Int      @id @default(autoincrement())
-  userId           Int?
-  artistId         Int?
-  establishmentId  Int?
-  subscriptionId   Int?
-  amount           Float
-  currency         String
-  paymentMethod    String
-  transactionId    String   @unique
-  status           String   // 'pending', 'approved', 'declined', 'refunded'
-  receiptUrl       String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  userId          Int?
+  artistId        Int?
+  establishmentId Int?
+  subscriptionId  Int?
+  amount          Float
+  currency        String
+  paymentMethod   String
+  transactionId   String   @unique
+  status          String // 'pending', 'approved', 'declined', 'refunded'
+  receiptUrl      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  user            User?          @relation(fields: [userId], references: [id])
-  artist          Artist?        @relation(fields: [artistId], references: [id])
-  establishment   Establishment? @relation(fields: [establishmentId], references: [id])
-  subscription    Subscription?  @relation(fields: [subscriptionId], references: [id])
+  user          User?          @relation(fields: [userId], references: [id])
+  artist        Artist?        @relation(fields: [artistId], references: [id])
+  establishment Establishment? @relation(fields: [establishmentId], references: [id])
+  subscription  Subscription?  @relation(fields: [subscriptionId], references: [id])
 }
-
 
 model Subscription {
-  id               Int       @id @default(autoincrement())
-  userId           Int
-  artistId         Int?
-  establishmentId  Int?
-  planId           Int
-  plan             String
-  startDate        DateTime
-  endDate          DateTime
-  status           String    // 'active', 'inactive', 'canceled', 'past_due'
-  nextPaymentDate  DateTime?
-  amount           Float
-  currency         String
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  artistId        Int?
+  establishmentId Int?
+  planId          Int
+  plan            String
+  startDate       DateTime
+  endDate         DateTime
+  status          String // 'active', 'inactive', 'canceled', 'past_due'
+  nextPaymentDate DateTime?
+  amount          Float
+  currency        String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  user            User           @relation(fields: [userId], references: [id])
-  artist          Artist?        @relation(fields: [artistId], references: [id])
-  establishment   Establishment? @relation(fields: [establishmentId], references: [id])
-  transactions    Transaction[]
+  user          User           @relation(fields: [userId], references: [id])
+  artist        Artist?        @relation(fields: [artistId], references: [id])
+  establishment Establishment? @relation(fields: [establishmentId], references: [id])
+  transactions  Transaction[]
 }
-

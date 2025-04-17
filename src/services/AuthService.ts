@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { PrismaClient, User, UserProfileType } from '@prisma/client';
+import { PrismaClient, User, UserProfileType, UserStatus, UserRoleEnum } from '@prisma/client';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -9,107 +9,141 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export class AuthService {
-    async register(email: string, password: string, role: string): Promise<User> {
-        // Lista de roles válidas
-        const validRoles = ['USER', 'ADMIN'];
-
-        // Normaliza e verifica se o role é válido
-        const normalizedRole = role.trim().toUpperCase(); 
-        if (!validRoles.includes(normalizedRole)) {
-            throw new Error('Role not found');
-        }
-
-        // Verifica se o usuário já existe
-        const existingUser = await prisma.user.findUnique({
-            where: { email },
-        });
-        if (existingUser) {
-            throw new Error('User already exists');
-        }
-
-        // Criptografa a senha
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Cria o usuário com a role
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                name: 'Default Name',
-                profileType: 'DEFAULT' as UserProfileType,
-                status: 'ACTIVE',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                deletedAt: null,
-                roles: {
-                    create: {
-                        role: {
-                            connectOrCreate: {
-                                where: { name: normalizedRole },
-                                create: { name: normalizedRole },
-                            },
-                        },
-                    },
-                },
-            },
-        });
-
-        console.info(`New user created: ${email}, role: ${normalizedRole}`);
-        return user;
+  static verifyArtistApprovalToken: any;
+  /**
+   * 🔹 Gera um token de aprovação para um artista.
+   */
+  static generateArtistApprovalToken(artistId: number, establishmentId: number): string {
+    if (!artistId || !establishmentId) {
+      throw new Error('IDs inválidos para gerar o token.');
     }
 
-    async login(email: string, password: string): Promise<{ token: string; role: string }> {
-        const user = await prisma.user.findUnique({
-            where: { email },
-            include: {
-                roles: {
-                    include: {
-                        role: true,
-                    },
-                },
-            },
-        });
+    return jwt.sign(
+      { artistId, establishmentId },
+      JWT_SECRET,
+      { expiresIn: '7d' } // Expira em 7 dias
+    );
+  }
 
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            throw new Error('Invalid email or password');
-        }
+  /**
+   * 🔹 Verifica e decodifica um token JWT.
+   */
+  static verifyToken(token: string): object | null {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      return typeof decoded === 'object' && decoded !== null ? decoded : null;
+    } catch (error) {
+      console.error("❌ Erro ao verificar token:", error);
+      return null;
+    }
+  }
 
-        if (!user.roles || user.roles.length === 0) {
-            throw new Error('User has no roles assigned.');
-        }
+  /**
+   * 🔹 Registro de usuários com associação ao papel correto.
+   */
+  async register(email: string, password: string, role: UserRoleEnum): Promise<User> {
+    const validRoles: UserRoleEnum[] = ["ARTIST", "BUSINESS", "USER", "ADMIN", "CLIENT"]; // ✅ Adicionado "CLIENT"
 
-        const token = jwt.sign(
-            { userId: user.id, role: user.roles[0].role.name },
-            JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        console.info(`Token generated for user: ${email}`);
-        return { token, role: user.roles[0].role.name };
+    if (!validRoles.includes(role)) {
+      throw new Error("Role not found");
     }
 
-    async getAllUsers(): Promise<User[]> {
-        const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                profileType: true,
-                status: true,
-                createdAt: true,
-                updatedAt: true,
-                password: true, // Incluído para evitar erros de tipagem
-                deletedAt: true, // Incluído para evitar erros de tipagem
-                phone: true, // Add the 'phone' property
-                roles: {
-                    include: {
-                        role: true,
-                    },
-                },
-            },
-        });
-    
-        console.info(`Retrieved all users: ${users.map(user => user.email).join(', ')}`);
-        return users;
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      throw new Error("Email já cadastrado.");
     }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    let profileType: UserProfileType;
+
+    switch (role) {
+    case "CLIENT":
+    profileType = UserProfileType.CLIENT;
+    break;
+    case "ARTIST":
+    profileType = UserProfileType.ARTIST;
+    break;
+    case "BUSINESS":
+    profileType = UserProfileType.BUSINESS;
+    break;
+    default:
+    profileType = UserProfileType.USER; // Caso não seja um dos anteriores, define como USER
+}
+
+    let userRole = await prisma.role.findUnique({ where: { name: role } });
+    if (!userRole) {
+      userRole = await prisma.role.create({ data: { name: role } });
+    }
+
+    return prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name: email.split('@')[0], // Usa parte do email como nome padrão se não for fornecido
+        profileType,
+        status: UserStatus.INACTIVE,
+        roles: {
+          create: [{ role: { connect: { id: userRole.id } } }],
+        },
+      },
+    });
+  }
+
+  /**
+   * 🔹 Login de usuário e geração de token JWT.
+   */
+  async login(email: string, password: string): Promise<{ token: string; role: string }> {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new Error("Invalid email or password");
+    }
+
+    if (!user.roles || user.roles.length === 0) {
+      throw new Error("User has no roles assigned.");
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.roles[0].role.name },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    return { token, role: user.roles[0].role.name };
+  }
+
+  /**
+   * 🔹 Retorna todos os usuários cadastrados.
+   */
+  async getAllUsers(): Promise<User[]> {
+    return prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        password: true, // Include the password field
+        profileType: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+        phone: true,
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+  }
 }

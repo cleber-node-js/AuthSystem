@@ -4,80 +4,141 @@ exports.EstablishmentController = void 0;
 const EstablishmentService_1 = require("../services/EstablishmentService");
 const establishmentService = new EstablishmentService_1.EstablishmentService();
 class EstablishmentController {
-    // Método para criar um novo estabelecimento
+    // ✅ Criar estabelecimento
     async create(req, res) {
+        const { name, address, contact } = req.body;
+        const primaryOwnerId = req.userId;
+        if (!primaryOwnerId) {
+            return res.status(401).json({ error: 'Usuário não autenticado.' });
+        }
         try {
-            const { name, address, contact, primaryOwnerId } = req.body; // Incluído address e contact
-            const establishment = await establishmentService.createEstablishment(name, address, contact, primaryOwnerId);
+            const establishment = await establishmentService.createEstablishment(name, address, contact, Number(primaryOwnerId));
             return res.status(201).json(establishment);
         }
         catch (error) {
-            console.error(`❌ Erro ao criar estabelecimento:`, error);
+            console.error('❌ Erro ao criar estabelecimento:', error);
             return res.status(500).json({ error: 'Erro ao criar estabelecimento.' });
         }
     }
-    // Método para obter um estabelecimento pelo ID
+    // 🔍 Obter estabelecimento por ID
     async getById(req, res) {
-        const establishmentId = Number(req.params.id);
-        if (isNaN(establishmentId)) {
-            console.warn(`⚠️ ID do estabelecimento inválido: ${req.params.id}`);
+        const establishmentId = parseInt(req.params.id, 10);
+        if (isNaN(establishmentId) || establishmentId <= 0) {
             return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
         }
         try {
             const establishment = await establishmentService.getEstablishmentById(establishmentId);
-            if (!establishment) {
-                console.warn(`⚠️ Estabelecimento não encontrado para ID: ${establishmentId}`);
-                return res.status(404).json({ error: 'Estabelecimento não encontrado.' });
-            }
             return res.status(200).json(establishment);
         }
         catch (error) {
-            console.error(`❌ Erro ao obter estabelecimento ID ${establishmentId}:`, error);
-            return res.status(500).json({ error: 'Erro ao obter estabelecimento.' });
+            console.error('❌ Erro ao buscar estabelecimento:', error);
+            return res.status(500).json({ error: (error instanceof Error ? error.message : 'Erro desconhecido') });
         }
     }
-    // Método para obter todos os estabelecimentos
+    // 🔍 Obter todos os estabelecimentos
     async getAll(req, res) {
         try {
             const establishments = await establishmentService.getAllEstablishments();
             return res.status(200).json(establishments);
         }
         catch (error) {
-            console.error(`❌ Erro ao obter estabelecimentos:`, error);
-            return res.status(500).json({ error: 'Erro ao obter estabelecimentos.' });
+            console.error('❌ Erro ao listar estabelecimentos:', error);
+            return res.status(500).json({ error: 'Erro ao listar estabelecimentos.' });
         }
     }
-    // Método para atualizar um estabelecimento
+    // 🔍 Obter artistas por estabelecimento e status
+    async getArtistsByEstablishment(req, res) {
+        const establishmentId = parseInt(req.params.id, 10);
+        const { status } = req.query;
+        if (isNaN(establishmentId) || establishmentId <= 0) {
+            return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
+        }
+        try {
+            const artists = await establishmentService.getArtistsByEstablishmentAndStatus(establishmentId, status === null || status === void 0 ? void 0 : status.toString());
+            return res.status(200).json(artists);
+        }
+        catch (error) {
+            console.error('❌ Erro ao obter artistas:', error);
+            return res.status(500).json({ error: (error instanceof Error ? error.message : 'Erro desconhecido') });
+        }
+    }
+    // ✏️ Atualizar estabelecimento
     async update(req, res) {
-        const establishmentId = Number(req.params.id);
-        const data = req.body;
-        if (isNaN(establishmentId)) {
-            console.warn(`⚠️ ID do estabelecimento inválido para atualização: ${req.params.id}`);
+        const establishmentId = parseInt(req.params.id, 10);
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Usuário não autenticado.' });
+        }
+        if (isNaN(establishmentId) || establishmentId <= 0) {
             return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
         }
         try {
-            const updatedEstablishment = await establishmentService.updateEstablishment(establishmentId, data);
-            return res.status(200).json(updatedEstablishment);
+            const establishment = await establishmentService.getEstablishmentById(establishmentId);
+            if (establishment.primaryOwnerId !== Number(userId)) {
+                return res.status(403).json({ error: 'Você não tem permissão para atualizar este estabelecimento.' });
+            }
+            const updated = await establishmentService.updateEstablishment(establishmentId, req.body);
+            return res.status(200).json(updated);
         }
         catch (error) {
-            console.error(`❌ Erro ao atualizar estabelecimento ID ${establishmentId}:`, error);
-            return res.status(500).json({ error: 'Erro ao atualizar estabelecimento.' });
+            console.error('❌ Erro ao atualizar estabelecimento:', error);
+            return res.status(500).json({ error: (error instanceof Error ? error.message : 'Erro desconhecido') });
         }
     }
-    // Método para deletar um estabelecimento
+    // 🗑️ Excluir estabelecimento
     async delete(req, res) {
-        const establishmentId = Number(req.params.id);
-        if (isNaN(establishmentId)) {
-            console.warn(`⚠️ ID do estabelecimento inválido para exclusão: ${req.params.id}`);
+        const establishmentId = parseInt(req.params.id, 10);
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Usuário não autenticado.' });
+        }
+        if (isNaN(establishmentId) || establishmentId <= 0) {
             return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
         }
         try {
-            const deletedEstablishment = await establishmentService.deleteEstablishment(establishmentId);
-            return res.status(200).json({ message: 'Estabelecimento excluído com sucesso.', establishment: deletedEstablishment });
+            const establishment = await establishmentService.getEstablishmentById(establishmentId);
+            if (establishment.primaryOwnerId !== Number(userId)) {
+                return res.status(403).json({ error: 'Você não tem permissão para excluir este estabelecimento.' });
+            }
+            const result = await establishmentService.deleteEstablishment(establishmentId);
+            return res.status(200).json(result);
         }
         catch (error) {
-            console.error(`❌ Erro ao excluir estabelecimento ID ${establishmentId}:`, error);
-            return res.status(500).json({ error: 'Erro ao excluir estabelecimento.' });
+            console.error('❌ Erro ao excluir estabelecimento:', error);
+            return res.status(500).json({ error: (error instanceof Error ? error.message : 'Erro desconhecido') });
+        }
+    }
+    // ✅ Atualizar status do artista (APPROVED / REJECTED / PENDING / DECLINED / REFUNDED)
+    async updateArtistStatus(req, res) {
+        console.log("🔍 Params recebidos:", req.params);
+        console.log("🔍 Body recebido:", req.body);
+        const establishmentId = parseInt(req.params.establishmentId, 10) || parseInt(req.body.establishmentId, 10);
+        const artistId = parseInt(req.params.artistId, 10) || parseInt(req.body.artistId, 10);
+        const { status } = req.body;
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ error: "Usuário não autenticado." });
+        }
+        if (isNaN(establishmentId) || isNaN(artistId)) {
+            return res.status(400).json({ error: "ID do estabelecimento ou do artista inválido." });
+        }
+        if (!["APPROVED", "REJECTED", "PENDING", "DECLINED", "REFUNDED"].includes(status === null || status === void 0 ? void 0 : status.toUpperCase())) {
+            return res.status(400).json({ error: "Status inválido. Use APPROVED, REJECTED, PENDING, DECLINED ou REFUNDED." });
+        }
+        try {
+            const establishment = await establishmentService.getEstablishmentById(establishmentId);
+            if (!establishment) {
+                return res.status(404).json({ error: "Estabelecimento não encontrado." });
+            }
+            if (establishment.primaryOwnerId !== Number(userId)) {
+                return res.status(403).json({ error: "Você não tem permissão para alterar artistas neste estabelecimento." });
+            }
+            const result = await establishmentService.updateArtistStatus(establishmentId, artistId, status.toUpperCase());
+            return res.status(200).json(result);
+        }
+        catch (error) {
+            console.error("❌ Erro ao atualizar status do artista:", error);
+            return res.status(500).json({ error: (error instanceof Error ? error.message : "Erro desconhecido") });
         }
     }
 }

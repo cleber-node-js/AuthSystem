@@ -12,49 +12,76 @@ dotenv_1.default.config();
 const prisma = new client_1.PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 class AuthService {
+    /**
+     * 🔹 Gera um token de aprovação para um artista.
+     */
+    static generateArtistApprovalToken(artistId, establishmentId) {
+        if (!artistId || !establishmentId) {
+            throw new Error('IDs inválidos para gerar o token.');
+        }
+        return jsonwebtoken_1.default.sign({ artistId, establishmentId }, JWT_SECRET, { expiresIn: '7d' } // Expira em 7 dias
+        );
+    }
+    /**
+     * 🔹 Verifica e decodifica um token JWT.
+     */
+    static verifyToken(token) {
+        try {
+            const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+            return typeof decoded === 'object' && decoded !== null ? decoded : null;
+        }
+        catch (error) {
+            console.error("❌ Erro ao verificar token:", error);
+            return null;
+        }
+    }
+    /**
+     * 🔹 Registro de usuários com associação ao papel correto.
+     */
     async register(email, password, role) {
-        // Lista de roles válidas
-        const validRoles = ['USER', 'ADMIN'];
-        // Normaliza e verifica se o role é válido
-        const normalizedRole = role.trim().toUpperCase();
-        if (!validRoles.includes(normalizedRole)) {
-            throw new Error('Role not found');
+        const validRoles = ["ARTIST", "BUSINESS", "USER", "ADMIN", "CLIENT"]; // ✅ Adicionado "CLIENT"
+        if (!validRoles.includes(role)) {
+            throw new Error("Role not found");
         }
-        // Verifica se o usuário já existe
-        const existingUser = await prisma.user.findUnique({
-            where: { email },
-        });
+        const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
-            throw new Error('User already exists');
+            throw new Error("Email já cadastrado.");
         }
-        // Criptografa a senha
         const hashedPassword = await bcrypt_1.default.hash(password, 10);
-        // Cria o usuário com a role
-        const user = await prisma.user.create({
+        let profileType;
+        switch (role) {
+            case "CLIENT":
+                profileType = client_1.UserProfileType.CLIENT;
+                break;
+            case "ARTIST":
+                profileType = client_1.UserProfileType.ARTIST;
+                break;
+            case "BUSINESS":
+                profileType = client_1.UserProfileType.BUSINESS;
+                break;
+            default:
+                profileType = client_1.UserProfileType.USER; // Caso não seja um dos anteriores, define como USER
+        }
+        let userRole = await prisma.role.findUnique({ where: { name: role } });
+        if (!userRole) {
+            userRole = await prisma.role.create({ data: { name: role } });
+        }
+        return prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
-                name: 'Default Name',
-                profileType: 'DEFAULT',
-                status: 'ACTIVE',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                deletedAt: null,
+                name: email.split('@')[0], // Usa parte do email como nome padrão se não for fornecido
+                profileType,
+                status: client_1.UserStatus.INACTIVE,
                 roles: {
-                    create: {
-                        role: {
-                            connectOrCreate: {
-                                where: { name: normalizedRole },
-                                create: { name: normalizedRole },
-                            },
-                        },
-                    },
+                    create: [{ role: { connect: { id: userRole.id } } }],
                 },
             },
         });
-        console.info(`New user created: ${email}, role: ${normalizedRole}`);
-        return user;
     }
+    /**
+     * 🔹 Login de usuário e geração de token JWT.
+     */
     async login(email, password) {
         const user = await prisma.user.findUnique({
             where: { email },
@@ -67,28 +94,30 @@ class AuthService {
             },
         });
         if (!user || !(await bcrypt_1.default.compare(password, user.password))) {
-            throw new Error('Invalid email or password');
+            throw new Error("Invalid email or password");
         }
         if (!user.roles || user.roles.length === 0) {
-            throw new Error('User has no roles assigned.');
+            throw new Error("User has no roles assigned.");
         }
-        const token = jsonwebtoken_1.default.sign({ userId: user.id, role: user.roles[0].role.name }, JWT_SECRET, { expiresIn: '1h' });
-        console.info(`Token generated for user: ${email}`);
+        const token = jsonwebtoken_1.default.sign({ userId: user.id, role: user.roles[0].role.name }, JWT_SECRET, { expiresIn: "1h" });
         return { token, role: user.roles[0].role.name };
     }
+    /**
+     * 🔹 Retorna todos os usuários cadastrados.
+     */
     async getAllUsers() {
-        const users = await prisma.user.findMany({
+        return prisma.user.findMany({
             select: {
                 id: true,
                 email: true,
                 name: true,
+                password: true, // Include the password field
                 profileType: true,
                 status: true,
                 createdAt: true,
                 updatedAt: true,
-                password: true, // Incluído para evitar erros de tipagem
-                deletedAt: true, // Incluído para evitar erros de tipagem
-                phone: true, // Add the 'phone' property
+                deletedAt: true,
+                phone: true,
                 roles: {
                     include: {
                         role: true,
@@ -96,8 +125,6 @@ class AuthService {
                 },
             },
         });
-        console.info(`Retrieved all users: ${users.map(user => user.email).join(', ')}`);
-        return users;
     }
 }
 exports.AuthService = AuthService;

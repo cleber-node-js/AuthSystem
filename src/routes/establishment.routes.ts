@@ -1,24 +1,80 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router } from 'express';
 import { EstablishmentController } from '../controllers/EstablishmentController';
+import { authMiddleware, authenticateOwner } from '../middlewares/authMiddleware';
 
 const establishmentController = new EstablishmentController();
 const router = Router();
 
-// Ajuste das Rotas com Funções Anônimas
-router.post('/establishments', (req: Request, res: Response, next: NextFunction) => {
-  establishmentController.create(req, res).catch(next);
+// ✅ Criar estabelecimento — apenas usuário autenticado
+router.post('/establishments', authMiddleware, async (req, res, next) => {
+  try {
+    await establishmentController.create(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
-router.get('/establishments/:id', (req: Request, res: Response, next: NextFunction) => {
-  establishmentController.getById(req, res).catch(next);
+
+// ✅ Atualizar estabelecimento — só dono autenticado
+router.put('/establishments/:id', authMiddleware, authenticateOwner, async (req, res, next) => {
+  try {
+    await establishmentController.update(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
-router.get('/establishments', (req: Request, res: Response, next: NextFunction) => {
-  establishmentController.getAll(req, res).catch(next);
+
+// ✅ Deletar estabelecimento — só dono autenticado
+router.delete('/establishments/:id', authMiddleware, authenticateOwner, async (req, res, next) => {
+  try {
+    await establishmentController.delete(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
-router.put('/establishments/:id', (req: Request, res: Response, next: NextFunction) => {
-  establishmentController.update(req, res).catch(next);
+
+// 📥 Buscar estabelecimento por ID — público
+router.get('/establishments/:id', async (req, res, next) => {
+  try {
+    await establishmentController.getById(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
-router.delete('/establishments/:id', (req: Request, res: Response, next: NextFunction) => {
-  establishmentController.delete(req, res).catch(next);
+
+// 📋 Listar todos os estabelecimentos — público
+router.get('/establishments', async (req, res, next) => {
+  try {
+    await establishmentController.getAll(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
+
+// 🎤 Buscar artistas associados — público
+router.get('/establishments/:id/artists', async (req, res, next) => {
+  try {
+    await establishmentController.getArtistsByEstablishment(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ✅ Atualizar status de artista vinculado — só dono autenticado
+router.patch(
+  '/establishments/:establishmentId/artists/:artistId/status',
+  authMiddleware,
+  async (req, res, next) => {
+    console.log(`🔍 ID do estabelecimento recebido:`, req.params.establishmentId);
+    console.log(`🔍 ID do artista recebido:`, req.params.artistId);
+    console.log(`🔍 Body recebido:`, req.body);
+
+    try {
+      await establishmentController.updateArtistStatus(req, res);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 
 export default router;

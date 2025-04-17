@@ -4,6 +4,68 @@ import { PrismaClient, User, UserProfileType, UserStatus, Establishment } from '
 const prisma = new PrismaClient();
 
 export class UserService {
+  [x: string]: any;
+  /**
+   * 🔹 Retorna todos os usuários
+   */
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const users = await prisma.user.findMany();
+      return users;
+    } catch (error) {
+      console.error("❌ Erro ao buscar usuários:", error);
+      throw new Error("Erro ao buscar usuários no banco de dados.");
+    }
+  }
+
+  /**
+   * 🔹 Buscar usuário por ID
+   */
+  async getUserById(userId: number): Promise<User | null> {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      return user;
+    } catch (error) {
+      console.error(`❌ Erro ao buscar usuário ID ${userId}:`, error);
+      throw new Error("Erro ao buscar usuário.");
+    }
+  }
+
+  /**
+   * 🔹 Atualizar usuário
+   */
+  async updateUser(userId: number, data: Partial<User>): Promise<User> {
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data,
+      });
+      return updatedUser;
+    } catch (error) {
+      console.error(`❌ Erro ao atualizar usuário ID ${userId}:`, error);
+      throw new Error("Erro ao atualizar usuário.");
+    }
+  }
+
+  /**
+   * 🔹 Soft delete (marca o usuário como excluído, sem remover do banco)
+   */
+  async softDeleteUser(userId: number): Promise<User> {
+    try {
+      const deletedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { deletedAt: new Date() },
+      });
+      return deletedUser;
+    } catch (error) {
+      console.error(`❌ Erro ao excluir usuário ID ${userId}:`, error);
+      throw new Error("Erro ao excluir usuário.");
+    }
+  }
+
+  /**
+   * 🔹 Registrar um novo usuário
+   */
   async registerUser(
     email: string,
     password: string,
@@ -29,13 +91,12 @@ export class UserService {
           profileType = UserProfileType.ARTIST;
           break;
         case 'ESTABLISHMENT':
-          profileType = UserProfileType.BUSINESS; // Corrigido para BUSINESS conforme o enum
+          profileType = UserProfileType.BUSINESS;
           break;
         default:
           profileType = UserProfileType.CLIENT;
       }
 
-      // Verifica se a role 'USER' existe; caso contrário, cria uma nova
       let userRole = await prisma.role.findUnique({ where: { name: 'USER' } });
       if (!userRole) {
         userRole = await prisma.role.create({ data: { name: 'USER' } });
@@ -48,20 +109,14 @@ export class UserService {
           name,
           profileType,
           status: UserStatus.INACTIVE,
-          roles: { // Modificação aqui
-            create: [ // Use 'create' para criar registros na tabela de junção
-              {
-                role: {
-                  connect: { id: userRole.id }, // Conecta à Role existente com o ID da role 'USER'
-                },
-              },
-            ],
+          roles: {
+            create: [{ role: { connect: { id: userRole.id } } }],
           },
         },
       });
 
       console.log(`✅ Usuário criado com ID: ${user.id}`);
-      
+
       if (userType === 'ARTIST') {
         if (!additionalData || !additionalData.establishmentId) {
           throw new Error('Dados adicionais para artista são obrigatórios.');
@@ -82,10 +137,9 @@ export class UserService {
               address: additionalData.address,
               contact: additionalData.contact,
               primaryOwnerId: user.id,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            } as Establishment,
+            },
           });
+
           console.log(`🏢 Novo estabelecimento criado: ${establishment.name}`);
         }
 
@@ -94,11 +148,16 @@ export class UserService {
             name: additionalData.name,
             genre: additionalData.genre,
             bio: additionalData.bio,
-            establishmentId: establishment.id,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            status: 'PENDING',
+            establishments: { 
+              create: { 
+                establishment: { connect: { id: establishment.id } }, // ✅ Correção aqui
+                status: 'PENDING' 
+              }, 
+            },
           },
         });
+
         console.log(`🎨 Artista ${additionalData.name} registrado no estabelecimento ${establishment.name}`);
       } else if (userType === 'ESTABLISHMENT') {
         if (!additionalData) {
@@ -111,78 +170,13 @@ export class UserService {
             address: additionalData.address,
             contact: additionalData.contact,
             primaryOwnerId: user.id,
-            createdAt: new Date(),
-            updatedAt: new Date(),
           },
         });
+
         console.log(`🏢 Estabelecimento ${additionalData.name} registrado com sucesso!`);
       }
 
       return user;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
-
-  async softDeleteUser(userId: number): Promise<User> {
-    try {
-      console.log(`🗑️ Marcando usuário com ID: ${userId} como deletado`);
-
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: { deletedAt: new Date() },
-      });
-
-      console.log(`✅ Usuário marcado como deletado: ${updatedUser.name} (ID: ${updatedUser.id})`);
-      return updatedUser;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
-
-  async getUserById(userId: number): Promise<User | null> {
-    try {
-      console.log(`🔍 Buscando usuário com ID: ${userId}`);
-
-      if (isNaN(userId)) {
-        throw new Error('ID do usuário inválido.');
-      }
-
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: { roles: true },
-      });
-
-      return user;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
-
-  async getAllUsers(): Promise<User[]> {
-    try {
-      console.log('📃 Buscando todos os usuários...');
-      const users = await prisma.user.findMany({ include: { roles: true } });
-      return users;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
-
-  async updateUser(userId: number, data: Partial<Omit<User, 'id' | 'password'>>): Promise<User> {
-    try {
-      console.log(`🔄 Atualizando usuário com ID: ${userId}`);
-
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data,
-      });
-
-      return updatedUser;
     } catch (error) {
       console.error(error);
       throw error;
