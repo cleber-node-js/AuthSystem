@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { EstablishmentController } from '../controllers/EstablishmentController';
+import { upload } from '../middlewares/upload'; // Middleware para upload de imagem
 import { authMiddleware, authenticateOwner } from '../middlewares/authMiddleware';
 
 const establishmentController = new EstablishmentController();
 const router = Router();
 
-// ✅ Criar estabelecimento — apenas usuário autenticado
-router.post('/establishments', authMiddleware, async (req, res, next) => {
+// ✅ Criar estabelecimento — apenas usuário autenticado, com upload de imagem
+router.post('/establishments', authMiddleware, upload.single('image'), async (req, res, next) => {
   try {
     await establishmentController.create(req, res);
   } catch (error) {
@@ -75,6 +76,5 @@ router.patch(
     }
   }
 );
-
 
 export default router;

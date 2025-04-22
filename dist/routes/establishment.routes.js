@@ -2,11 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const EstablishmentController_1 = require("../controllers/EstablishmentController");
+const upload_1 = require("../middlewares/upload"); // Middleware para upload de imagem
 const authMiddleware_1 = require("../middlewares/authMiddleware");
 const establishmentController = new EstablishmentController_1.EstablishmentController();
 const router = (0, express_1.Router)();
-// ✅ Criar estabelecimento — apenas usuário autenticado
-router.post('/establishments', authMiddleware_1.authMiddleware, async (req, res, next) => {
+// ✅ Criar estabelecimento — apenas usuário autenticado, com upload de imagem
+router.post('/establishments', authMiddleware_1.authMiddleware, upload_1.upload.single('image'), async (req, res, next) => {
     try {
         await establishmentController.create(req, res);
     }

@@ -7,9 +7,11 @@ export class ArtistService {
   requestShow(parsedArtistId: number, parsedEstablishmentId: number): { artist: any; requestToken: any; } | PromiseLike<{ artist: any; requestToken: any; }> {
     throw new Error('Method not implemented.');
   }
+
   respondToShowRequest(requestToken: any, ownerId: number, arg2: string, approvalMessage: any) {
     throw new Error('Method not implemented.');
   }
+
   /**
    * 🔹 Cria um novo artista e vincula ao estabelecimento.
    */
@@ -18,7 +20,8 @@ export class ArtistService {
     genre: string = '',
     establishmentId: number,
     bio?: string,
-    status: ArtistStatus = ArtistStatus.PENDING
+    status: ArtistStatus = ArtistStatus.PENDING,
+    imageUrl?: string // 👈 aceita URL da imagem
   ): Promise<{ artist: Artist; requestToken: string }> {
     console.log("🔍 Iniciando criação do artista...");
 
@@ -40,6 +43,7 @@ export class ArtistService {
         name,
         genre,
         bio,
+        imageUrl, // 👈 salva a imagem
         status,
         establishments: {
           create: {
@@ -53,7 +57,6 @@ export class ArtistService {
     const requestToken = AuthService.generateArtistApprovalToken(artist.id, parsedEstablishmentId);
 
     console.log(`✅ Artista criado com sucesso. Token gerado: ${requestToken}`);
-
     return { artist, requestToken };
   }
 

@@ -14,7 +14,8 @@ class ArtistService {
     /**
      * 🔹 Cria um novo artista e vincula ao estabelecimento.
      */
-    async createArtist(name, genre = '', establishmentId, bio, status = client_1.ArtistStatus.PENDING) {
+    async createArtist(name, genre = '', establishmentId, bio, status = client_1.ArtistStatus.PENDING, imageUrl // 👈 aceita URL da imagem
+    ) {
         console.log("🔍 Iniciando criação do artista...");
         const parsedEstablishmentId = Number(establishmentId);
         if (isNaN(parsedEstablishmentId)) {
@@ -31,6 +32,7 @@ class ArtistService {
                 name,
                 genre,
                 bio,
+                imageUrl, // 👈 salva a imagem
                 status,
                 establishments: {
                     create: {

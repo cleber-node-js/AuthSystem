@@ -10,20 +10,27 @@ class NotFoundError extends Error {
 }
 
 export class EstablishmentService {
-  // ✅ Criar um novo estabelecimento
-  async createEstablishment(
-    name: string,
-    address: string | null,
-    contact: string | null,
-    primaryOwnerId: number
-  ): Promise<Establishment> {
-    if (!name || !primaryOwnerId) {
-      throw new Error('Nome e ID do proprietário são obrigatórios para criar um estabelecimento.');
-    }
+  // ✅ Criar um novo estabelecimento com imagem
+async createEstablishment(
+  name: string,
+  address: string | null,
+  contact: string | null,
+  primaryOwnerId: number,
+  imageUrl?: string // <-- novo parâmetro opcional
+): Promise<Establishment> {
+  if (!name || !primaryOwnerId) {
+    throw new Error('Nome e ID do proprietário são obrigatórios para criar um estabelecimento.');
+  }
 
-    return prisma.establishment.create({
-      data: { name, address, contact, primaryOwnerId },
-    });
+  return prisma.establishment.create({
+    data: {
+      name,
+      address,
+      contact,
+      primaryOwnerId,
+      imageUrl, // <-- agora sendo salvo no banco
+    },
+  });
   }
 
   // 🔍 Buscar estabelecimento por ID

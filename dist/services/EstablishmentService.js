@@ -10,13 +10,20 @@ class NotFoundError extends Error {
     }
 }
 class EstablishmentService {
-    // ✅ Criar um novo estabelecimento
-    async createEstablishment(name, address, contact, primaryOwnerId) {
+    // ✅ Criar um novo estabelecimento com imagem
+    async createEstablishment(name, address, contact, primaryOwnerId, imageUrl // <-- novo parâmetro opcional
+    ) {
         if (!name || !primaryOwnerId) {
             throw new Error('Nome e ID do proprietário são obrigatórios para criar um estabelecimento.');
         }
         return prisma.establishment.create({
-            data: { name, address, contact, primaryOwnerId },
+            data: {
+                name,
+                address,
+                contact,
+                primaryOwnerId,
+                imageUrl, // <-- agora sendo salvo no banco
+            },
         });
     }
     // 🔍 Buscar estabelecimento por ID

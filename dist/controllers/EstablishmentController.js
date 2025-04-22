@@ -4,15 +4,19 @@ exports.EstablishmentController = void 0;
 const EstablishmentService_1 = require("../services/EstablishmentService");
 const establishmentService = new EstablishmentService_1.EstablishmentService();
 class EstablishmentController {
-    // ✅ Criar estabelecimento
+    // ✅ Criar estabelecimento com imagem
     async create(req, res) {
         const { name, address, contact } = req.body;
         const primaryOwnerId = req.userId;
+        // Verificar se o usuário está autenticado
         if (!primaryOwnerId) {
             return res.status(401).json({ error: 'Usuário não autenticado.' });
         }
+        // Definir a URL da imagem, se fornecida
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
         try {
-            const establishment = await establishmentService.createEstablishment(name, address, contact, Number(primaryOwnerId));
+            const establishment = await establishmentService.createEstablishment(name, address, contact, Number(primaryOwnerId), imageUrl // ✅ Enviado ao service
+            );
             return res.status(201).json(establishment);
         }
         catch (error) {

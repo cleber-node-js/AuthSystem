@@ -10,21 +10,27 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const artistService = new ArtistService_1.ArtistService();
 class ArtistController {
     /**
-     * 🔹 Criação de um novo artista vinculado a um estabelecimento.
+     * 🔹 Criação de um novo artista com upload de imagem
      */
     async create(req, res) {
         try {
             const { name, genre, bio, establishmentId, status } = req.body;
+            // Converte o ID do estabelecimento para um número inteiro
             const parsedEstablishmentId = parseInt(establishmentId, 10);
+            // Verifica se os parâmetros obrigatórios foram passados corretamente
             if (!name || isNaN(parsedEstablishmentId)) {
-                return res.status(400).json({ error: 'Nome e um ID do estabelecimento válido são obrigatórios.' });
+                return res.status(400).json({ error: 'Nome e ID do estabelecimento são obrigatórios.' });
             }
-            const { artist, requestToken } = await artistService.createArtist(name, genre, parsedEstablishmentId, bio, status);
+            // Pega a URL da imagem se o arquivo foi enviado
+            const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+            // Chama o serviço para criar o artista
+            const { artist, requestToken } = await artistService.createArtist(name, genre, parsedEstablishmentId, bio, status, imageUrl);
+            // Retorna a resposta com o artista criado e o token de solicitação
             return res.status(201).json({ artist, requestToken });
         }
         catch (error) {
             console.error(`❌ Erro ao criar artista:`, error);
-            return res.status(400).json({ error: error instanceof Error ? error.message : 'Erro ao criar artista.' });
+            return res.status(400).json({ error: 'Erro ao criar artista.' });
         }
     }
     /**
