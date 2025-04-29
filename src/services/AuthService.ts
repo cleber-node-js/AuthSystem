@@ -10,6 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export class AuthService {
   static verifyArtistApprovalToken: any;
+  static generateRequestToken: any;
   /**
    * 🔹 Gera um token de aprovação para um artista.
    */

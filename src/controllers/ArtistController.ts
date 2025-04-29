@@ -12,19 +12,19 @@ export class ArtistController {
    */
   async create(req: Request, res: Response): Promise<Response> {
     try {
-      const { name, genre, bio, establishmentId, status } = req.body;
-
-      // Converte o ID do estabelecimento para um número inteiro
+      const { name, genre, bio, establishmentId, status, imageUrl } = req.body;
+  
+      // Converte o ID do estabelecimento para número
       const parsedEstablishmentId = parseInt(establishmentId, 10);
-
+  
       // Verifica se os parâmetros obrigatórios foram passados corretamente
       if (!name || isNaN(parsedEstablishmentId)) {
-        return res.status(400).json({ error: 'Nome e ID do estabelecimento são obrigatórios.' });
+        return res.status(400).json({ error: "Nome e ID do estabelecimento são obrigatórios." });
       }
-
-      // Pega a URL da imagem se o arquivo foi enviado
-      const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
-
+  
+      // ✅ Garante que `imageUrl` seja corretamente salvo
+      const finalImageUrl = imageUrl ? imageUrl.trim() : "https://default-image-url.com/artist.jpg";
+  
       // Chama o serviço para criar o artista
       const { artist, requestToken } = await artistService.createArtist(
         name,
@@ -32,16 +32,15 @@ export class ArtistController {
         parsedEstablishmentId,
         bio,
         status as ArtistStatus,
-        imageUrl
+        finalImageUrl
       );
-
-      // Retorna a resposta com o artista criado e o token de solicitação
+  
       return res.status(201).json({ artist, requestToken });
     } catch (error) {
       console.error(`❌ Erro ao criar artista:`, error);
-      return res.status(400).json({ error: 'Erro ao criar artista.' });
+      return res.status(400).json({ error: "Erro ao criar artista." });
     }
-  }
+  }  
 
   /**
    * 🔹 Solicitação de apresentação no estabelecimento pelo artista.
@@ -49,21 +48,24 @@ export class ArtistController {
   async requestShow(req: Request, res: Response): Promise<Response> {
     try {
       const { artistId, establishmentId } = req.body;
-
+  
       const parsedArtistId = parseInt(artistId, 10);
       const parsedEstablishmentId = parseInt(establishmentId, 10);
-
+  
       if (isNaN(parsedArtistId) || isNaN(parsedEstablishmentId)) {
-        return res.status(400).json({ error: 'ID do artista e do estabelecimento devem ser números válidos.' });
+        return res.status(400).json({ error: "ID do artista e do estabelecimento devem ser números válidos." });
       }
-
+  
+      // ✅ Agora chamando `requestShow` corretamente!
       const { artist, requestToken } = await artistService.requestShow(parsedArtistId, parsedEstablishmentId);
       return res.status(201).json({ artist, requestToken });
     } catch (error) {
       console.error(`❌ Erro na solicitação de show:`, error);
-      return res.status(400).json({ error: error instanceof Error ? error.message : 'Erro na solicitação de show.' });
+      return res.status(400).json({ error: error instanceof Error ? error.message : "Erro na solicitação de show." });
     }
   }
+  
+  
 
   /**
    * 🔹 Aprova ou rejeita a solicitação de apresentação do artista.

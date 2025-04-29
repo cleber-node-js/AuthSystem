@@ -1,4 +1,4 @@
-import { PrismaClient, Establishment, ArtistStatus } from '@prisma/client';
+import { PrismaClient, Establishment, ArtistStatus, CategoryType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -10,27 +10,37 @@ class NotFoundError extends Error {
 }
 
 export class EstablishmentService {
-  // ✅ Criar um novo estabelecimento com imagem
-async createEstablishment(
-  name: string,
-  address: string | null,
-  contact: string | null,
-  primaryOwnerId: number,
-  imageUrl?: string // <-- novo parâmetro opcional
-): Promise<Establishment> {
-  if (!name || !primaryOwnerId) {
-    throw new Error('Nome e ID do proprietário são obrigatórios para criar um estabelecimento.');
-  }
+  // ✅ Criar estabelecimento com imagem, localização e categorias
+  async createEstablishment(
+    name: string,
+    address: string | null,
+    contact: string | null,
+    primaryOwnerId: number,
+    latitude: number,
+    longitude: number,
+    categories: CategoryType[],
+    imageUrl?: string // <-- novo parâmetro opcional
+  ): Promise<Establishment> {
+    if (!name || !primaryOwnerId || !latitude || !longitude || categories.length === 0) {
+      throw new Error("Nome, ID do proprietário, localização e categorias são obrigatórios.");
+    }
 
-  return prisma.establishment.create({
-    data: {
-      name,
-      address,
-      contact,
-      primaryOwnerId,
-      imageUrl, // <-- agora sendo salvo no banco
-    },
-  });
+    return prisma.establishment.create({
+      data: {
+        name,
+        address,
+        contact,
+        latitude,
+        longitude,
+        primaryOwnerId,
+        imageUrl,
+        categories: {
+          create: categories.map(category => ({
+            category
+          })),
+        },
+      },
+    });
   }
 
   // 🔍 Buscar estabelecimento por ID
@@ -41,6 +51,9 @@ async createEstablishment(
 
     const establishment = await prisma.establishment.findUnique({
       where: { id },
+      include: {
+        categories: true, // Incluindo categorias ao buscar o estabelecimento
+      }
     });
 
     if (!establishment) {
@@ -52,7 +65,11 @@ async createEstablishment(
 
   // 🔍 Buscar todos os estabelecimentos
   async getAllEstablishments(): Promise<Establishment[]> {
-    return prisma.establishment.findMany();
+    return prisma.establishment.findMany({
+      include: {
+        categories: true, // Incluindo categorias ao listar estabelecimentos
+      }
+    });
   }
 
   // 🔎 Buscar artistas por estabelecimento e status
@@ -87,19 +104,38 @@ async createEstablishment(
   // ✏️ Atualizar um estabelecimento
   async updateEstablishment(
     id: number,
-    data: Partial<{ name: string; address: string; contact: string; primaryOwnerId: number }>
+    data: Partial<{ 
+      name: string; 
+      address: string; 
+      contact: string; 
+      primaryOwnerId: number; 
+      latitude: number; 
+      longitude: number; 
+      categories: CategoryType[] 
+    }>
   ): Promise<Establishment> {
-    await this.getEstablishmentById(id); // valida existência
+    await this.getEstablishmentById(id); // Valida existência
 
     return prisma.establishment.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        categories: data.categories ? {
+          deleteMany: {}, // Exclui todas as categorias existentes
+          create: data.categories.map(category => ({
+            category
+          })), // Adiciona novas categorias
+        } : undefined,
+      },
+      include: {
+        categories: true, // Inclui categorias no resultado após a atualização
+      }
     });
   }
 
   // 🗑️ Excluir um estabelecimento
   async deleteEstablishment(id: number): Promise<{ message: string }> {
-    await this.getEstablishmentById(id); // valida existência
+    await this.getEstablishmentById(id); // Valida existência
 
     await prisma.establishment.delete({
       where: { id },

@@ -4,24 +4,22 @@ exports.EstablishmentController = void 0;
 const EstablishmentService_1 = require("../services/EstablishmentService");
 const establishmentService = new EstablishmentService_1.EstablishmentService();
 class EstablishmentController {
-    // ✅ Criar estabelecimento com imagem
+    // ✅ Criar estabelecimento com imagem e novos campos
     async create(req, res) {
-        const { name, address, contact } = req.body;
+        const { name, address, contact, latitude, longitude, categories } = req.body;
         const primaryOwnerId = req.userId;
-        // Verificar se o usuário está autenticado
         if (!primaryOwnerId) {
-            return res.status(401).json({ error: 'Usuário não autenticado.' });
+            return res.status(401).json({ error: "Usuário não autenticado." });
         }
-        // Definir a URL da imagem, se fornecida
-        const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+        // ✅ Gera URL pública da imagem corretamente
+        const imageUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : undefined;
         try {
-            const establishment = await establishmentService.createEstablishment(name, address, contact, Number(primaryOwnerId), imageUrl // ✅ Enviado ao service
-            );
+            const establishment = await establishmentService.createEstablishment(name, address, contact, Number(primaryOwnerId), latitude, longitude, categories, imageUrl);
             return res.status(201).json(establishment);
         }
         catch (error) {
-            console.error('❌ Erro ao criar estabelecimento:', error);
-            return res.status(500).json({ error: 'Erro ao criar estabelecimento.' });
+            console.error("❌ Erro ao criar estabelecimento:", error);
+            return res.status(500).json({ error: "Erro ao criar estabelecimento." });
         }
     }
     // 🔍 Obter estabelecimento por ID

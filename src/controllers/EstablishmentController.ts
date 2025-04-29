@@ -5,33 +5,33 @@ import { CustomRequest } from '../middlewares/authMiddleware';
 const establishmentService = new EstablishmentService();
 
 export class EstablishmentController {
-  // ✅ Criar estabelecimento com imagem
-async create(req: CustomRequest, res: Response): Promise<Response> {
-  const { name, address, contact } = req.body;
-  const primaryOwnerId = req.userId;
-
-  // Verificar se o usuário está autenticado
-  if (!primaryOwnerId) {
-    return res.status(401).json({ error: 'Usuário não autenticado.' });
-  }
-
-  // Definir a URL da imagem, se fornecida
-  const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
-
-  try {
-    const establishment = await establishmentService.createEstablishment(
-      name,
-      address,
-      contact,
-      Number(primaryOwnerId),
-      imageUrl // ✅ Enviado ao service
-    );
-    return res.status(201).json(establishment);
-  } catch (error) {
-    console.error('❌ Erro ao criar estabelecimento:', error);
-    return res.status(500).json({ error: 'Erro ao criar estabelecimento.' });
-  }
- }
+  // ✅ Criar estabelecimento com imagem e novos campos
+  async create(req: CustomRequest, res: Response): Promise<Response> {
+    const { name, address, contact, latitude, longitude, categories, imageUrl } = req.body;
+    const primaryOwnerId = req.userId;
+  
+    if (!primaryOwnerId) {
+      return res.status(401).json({ error: "Usuário não autenticado." });
+    }
+  
+    try {
+      const establishment = await establishmentService.createEstablishment(
+        name,
+        address,
+        contact,
+        Number(primaryOwnerId),
+        latitude,
+        longitude,
+        categories,
+        imageUrl // ✅ Agora armazenado corretamente
+      );
+  
+      return res.status(201).json(establishment);
+    } catch (error) {
+      console.error("❌ Erro ao criar estabelecimento:", error);
+      return res.status(500).json({ error: "Erro ao criar estabelecimento." });
+    }
+  }      
 
   // 🔍 Obter estabelecimento por ID
   async getById(req: Request, res: Response): Promise<Response> {

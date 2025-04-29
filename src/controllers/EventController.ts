@@ -6,12 +6,21 @@ const eventService = new EventService();
 export class EventController {
     // Criar um novo evento
     async create(req: Request, res: Response): Promise<Response> {
-        const { name, description, startDate, endDate, establishmentId } = req.body;
-        const imageFile = req.file;
+        const {
+            name,
+            description,
+            startDate,
+            endDate,
+            establishmentId,
+            categories,
+            artists
+        } = req.body;
+
+        const imageFile = req.file; // Captura o arquivo da imagem
 
         // Depuração para verificar as datas recebidas
         console.log('startDate:', startDate);
-        console.log('endDate:', endDate);  // Verifique se o valor de endDate está correto
+        console.log('endDate:', endDate);
 
         // ✅ Validação básica de datas
         if (!startDate || isNaN(Date.parse(startDate))) {
@@ -23,22 +32,28 @@ export class EventController {
         }
 
         try {
+            // Processamento da URL da imagem
             const imageUrl = imageFile ? `/uploads/${imageFile.filename}` : undefined;
 
+            // Chamada ao serviço para criar o evento
             const event = await eventService.createEvent({
                 name,
                 description,
                 startDate: new Date(startDate),
-                endDate: endDate ? new Date(endDate) : undefined, // Verifique como o endDate é passado
+                endDate: endDate ? new Date(endDate) : undefined,
                 establishmentId: Number(establishmentId),
                 imageUrl,
+                latitude: Number(req.body.latitude), // Extract latitude
+                longitude: Number(req.body.longitude), // Extract longitude
+                categories, // Passa as categorias
+                artists // Passa os artistas
             });
 
             console.log('Evento criado:', event);
             return res.status(201).json(event);
         } catch (error: any) {
             console.error('Erro ao criar evento:', error.message);
-            return res.status(400).json({ error: error.message });
+            return res.status(500).json({ error: 'Erro ao criar evento.' });
         }
     }
 
@@ -74,7 +89,13 @@ export class EventController {
     // Atualizar um evento existente
     async update(req: Request, res: Response): Promise<Response> {
         const eventId = Number(req.params.id);
-        const { name, description, startDate, endDate } = req.body;
+        const {
+            name,
+            description,
+            startDate,
+            endDate
+        } = req.body;
+        
         const imageFile = req.file;
 
         try {
@@ -85,7 +106,7 @@ export class EventController {
                 description,
                 startDate: startDate ? new Date(startDate) : undefined,
                 endDate: endDate ? new Date(endDate) : undefined,
-                imageUrl,
+                imageUrl
             });
 
             console.log(`Evento ${eventId} atualizado:`, updatedEvent);

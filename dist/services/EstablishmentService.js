@@ -10,19 +10,24 @@ class NotFoundError extends Error {
     }
 }
 class EstablishmentService {
-    // ✅ Criar um novo estabelecimento com imagem
-    async createEstablishment(name, address, contact, primaryOwnerId, imageUrl // <-- novo parâmetro opcional
+    // ✅ Criar estabelecimento com imagem, localização e categorias
+    async createEstablishment(name, address, contact, primaryOwnerId, latitude, longitude, categories, imageUrl // <-- novo parâmetro opcional
     ) {
-        if (!name || !primaryOwnerId) {
-            throw new Error('Nome e ID do proprietário são obrigatórios para criar um estabelecimento.');
+        if (!name || !primaryOwnerId || !latitude || !longitude || !categories.length) {
+            throw new Error("Nome, ID do proprietário, localização e categorias são obrigatórios.");
         }
         return prisma.establishment.create({
             data: {
                 name,
                 address,
                 contact,
+                latitude,
+                longitude,
                 primaryOwnerId,
                 imageUrl, // <-- agora sendo salvo no banco
+                categories: {
+                    create: categories.map(category => ({ category })), // Adicionando as categorias
+                },
             },
         });
     }
@@ -33,6 +38,9 @@ class EstablishmentService {
         }
         const establishment = await prisma.establishment.findUnique({
             where: { id },
+            include: {
+                categories: true, // Incluindo categorias ao buscar o estabelecimento
+            }
         });
         if (!establishment) {
             throw new NotFoundError(`Estabelecimento com ID ${id} não encontrado.`);
@@ -41,7 +49,11 @@ class EstablishmentService {
     }
     // 🔍 Buscar todos os estabelecimentos
     async getAllEstablishments() {
-        return prisma.establishment.findMany();
+        return prisma.establishment.findMany({
+            include: {
+                categories: true, // Incluindo categorias ao listar estabelecimentos
+            }
+        });
     }
     // 🔎 Buscar artistas por estabelecimento e status
     async getArtistsByEstablishmentAndStatus(establishmentId, status) {
@@ -69,15 +81,21 @@ class EstablishmentService {
     }
     // ✏️ Atualizar um estabelecimento
     async updateEstablishment(id, data) {
-        await this.getEstablishmentById(id); // valida existência
+        await this.getEstablishmentById(id); // Valida existência
         return prisma.establishment.update({
             where: { id },
-            data,
+            data: {
+                ...data,
+                categories: data.categories ? {
+                    deleteMany: {}, // Exclui todas as categorias existentes
+                    create: data.categories.map(category => ({ category })), // Adiciona novas categorias
+                } : undefined,
+            },
         });
     }
     // 🗑️ Excluir um estabelecimento
     async deleteEstablishment(id) {
-        await this.getEstablishmentById(id); // valida existência
+        await this.getEstablishmentById(id); // Valida existência
         await prisma.establishment.delete({
             where: { id },
         });

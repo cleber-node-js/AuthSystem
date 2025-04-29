@@ -1,15 +1,58 @@
-import { PrismaClient, Artist, ArtistStatus, NotificationCategory } from '@prisma/client';
-import { AuthService } from './AuthService';
+import { PrismaClient, Artist, ArtistStatus } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 
 export class ArtistService {
-  requestShow(parsedArtistId: number, parsedEstablishmentId: number): { artist: any; requestToken: any; } | PromiseLike<{ artist: any; requestToken: any; }> {
+  respondToShowRequest(requestToken: any, ownerId: number, arg2: string, approvalMessage: any): unknown {
     throw new Error('Method not implemented.');
   }
+  constructor() {}
 
-  respondToShowRequest(requestToken: any, ownerId: number, arg2: string, approvalMessage: any) {
-    throw new Error('Method not implemented.');
+  async requestShow(artistId: number, establishmentId: number): Promise<{ artist: Artist; requestToken: string }> {
+    // 🔍 Verificar se o artista já solicitou apresentação neste estabelecimento
+    const existingRequest = await prisma.establishmentArtists.findUnique({
+      where: {
+        artistId_establishmentId: {
+          artistId,
+          establishmentId,
+        },
+      },
+    });
+
+    if (existingRequest) {
+      throw new Error(`Artista já solicitou apresentação neste estabelecimento.`);
+    }
+
+    // 🔍 Verificar se o artista e o estabelecimento existem
+    const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+    if (!artist) {
+      throw new Error(`Artista com ID ${artistId} não encontrado.`);
+    }
+
+    const establishment = await prisma.establishment.findUnique({ where: { id: establishmentId } });
+    if (!establishment) {
+      throw new Error(`Estabelecimento com ID ${establishmentId} não encontrado.`);
+    }
+
+    // ✅ Criar a relação artista-estabelecimento
+    await prisma.establishmentArtists.create({
+      data: {
+        artistId,
+        establishmentId,
+        status: ArtistStatus.PENDING,
+        approvalMessage: null,
+      },
+    });
+
+    // 🔑 Gerar token de solicitação
+    const requestToken = jwt.sign(
+      { artistId, establishmentId },
+      "your_secret_key", // Altere para sua chave secreta
+      { expiresIn: "7d" }
+    );
+
+    return { artist, requestToken };
   }
 
   /**
@@ -43,7 +86,7 @@ export class ArtistService {
         name,
         genre,
         bio,
-        imageUrl, // 👈 salva a imagem
+        imageUrl: imageUrl || "https://default-image-url.com/artist.jpg", // ✅ Nunca será null!
         status,
         establishments: {
           create: {
@@ -54,7 +97,11 @@ export class ArtistService {
       },
     });
 
-    const requestToken = AuthService.generateArtistApprovalToken(artist.id, parsedEstablishmentId);
+    const requestToken = jwt.sign(
+      { artistId: artist.id, establishmentId: parsedEstablishmentId },
+      "your_secret_key", // Altere para sua chave secreta
+      { expiresIn: "7d" }
+    );
 
     console.log(`✅ Artista criado com sucesso. Token gerado: ${requestToken}`);
     return { artist, requestToken };

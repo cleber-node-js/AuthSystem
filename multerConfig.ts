@@ -1,13 +1,20 @@
-import multer from 'multer';
+import multer from "multer";
+import path from "path";
 
-// Configuração do `multer` para armazenar imagens
+// Diretório de armazenamento das imagens
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/artists'); // ✅ Diretório onde as imagens serão armazenadas
+    cb(null, path.join(__dirname, "../../uploads/establishments")); // ✅ Diretório correto
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 
+// Instância do `multer`
 export const upload = multer({ storage });
+
+// ✅ Servir imagens publicamente
+import express from "express";
+const app = express();
+app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
