@@ -13,7 +13,7 @@ class EstablishmentService {
     // ✅ Criar estabelecimento com imagem, localização e categorias
     async createEstablishment(name, address, contact, primaryOwnerId, latitude, longitude, categories, imageUrl // <-- novo parâmetro opcional
     ) {
-        if (!name || !primaryOwnerId || !latitude || !longitude || !categories.length) {
+        if (!name || !primaryOwnerId || !latitude || !longitude || categories.length === 0) {
             throw new Error("Nome, ID do proprietário, localização e categorias são obrigatórios.");
         }
         return prisma.establishment.create({
@@ -24,9 +24,11 @@ class EstablishmentService {
                 latitude,
                 longitude,
                 primaryOwnerId,
-                imageUrl, // <-- agora sendo salvo no banco
+                imageUrl,
                 categories: {
-                    create: categories.map(category => ({ category })), // Adicionando as categorias
+                    create: categories.map(category => ({
+                        category
+                    })),
                 },
             },
         });
@@ -88,9 +90,14 @@ class EstablishmentService {
                 ...data,
                 categories: data.categories ? {
                     deleteMany: {}, // Exclui todas as categorias existentes
-                    create: data.categories.map(category => ({ category })), // Adiciona novas categorias
+                    create: data.categories.map(category => ({
+                        category
+                    })), // Adiciona novas categorias
                 } : undefined,
             },
+            include: {
+                categories: true, // Inclui categorias no resultado após a atualização
+            }
         });
     }
     // 🗑️ Excluir um estabelecimento

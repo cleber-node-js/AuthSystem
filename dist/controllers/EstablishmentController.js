@@ -6,15 +6,14 @@ const establishmentService = new EstablishmentService_1.EstablishmentService();
 class EstablishmentController {
     // ✅ Criar estabelecimento com imagem e novos campos
     async create(req, res) {
-        const { name, address, contact, latitude, longitude, categories } = req.body;
+        const { name, address, contact, latitude, longitude, categories, imageUrl } = req.body;
         const primaryOwnerId = req.userId;
         if (!primaryOwnerId) {
             return res.status(401).json({ error: "Usuário não autenticado." });
         }
-        // ✅ Gera URL pública da imagem corretamente
-        const imageUrl = req.file ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` : undefined;
         try {
-            const establishment = await establishmentService.createEstablishment(name, address, contact, Number(primaryOwnerId), latitude, longitude, categories, imageUrl);
+            const establishment = await establishmentService.createEstablishment(name, address, contact, Number(primaryOwnerId), latitude, longitude, categories, imageUrl // ✅ Agora armazenado corretamente
+            );
             return res.status(201).json(establishment);
         }
         catch (error) {
