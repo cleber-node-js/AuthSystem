@@ -71,6 +71,11 @@ enum CategoryType {
   OTHER
 }
 
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+}
+
 model EstablishmentCategory {
   id               Int           @id @default(autoincrement())
   establishmentId  Int

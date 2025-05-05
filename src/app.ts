@@ -14,6 +14,7 @@ import { authRoutes } from './routes/auth.routes';
 import userPreferenceRoutes from './routes/userPreference.routes';
 import userVerificationTokenRoutes from './routes/userVerificationToken.routes';
 import notificationRoutes from './routes/notification.routes';
+import categoryRoutes from './routes/category.routes';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(cors());
 app.use('/api', userRoutes);
 app.use('/api', artistRoutes);
 app.use('/api', establishmentRoutes);
+app.use('/api', categoryRoutes);
 
 // Rotas que não precisam de autenticação
 app.use('/auth', authRoutes); // Rotas de autenticação (register, login)
