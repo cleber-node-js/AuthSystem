@@ -52,9 +52,8 @@ export class UserService {
    */
   async softDeleteUser(userId: number): Promise<User> {
     try {
-      const deletedUser = await prisma.user.update({
+      const deletedUser = await prisma.user.delete({
         where: { id: userId },
-        data: { deletedAt: new Date() },
       });
       return deletedUser;
     } catch (error) {
@@ -149,11 +148,11 @@ export class UserService {
             genre: additionalData.genre,
             bio: additionalData.bio,
             status: 'PENDING',
-            establishments: { 
-              create: { 
+            establishments: {
+              create: {
                 establishment: { connect: { id: establishment.id } }, // ✅ Correção aqui
-                status: 'PENDING' 
-              }, 
+                status: 'PENDING'
+              },
             },
           },
         });

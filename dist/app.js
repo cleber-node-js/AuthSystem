@@ -20,6 +20,7 @@ const auth_routes_1 = require("./routes/auth.routes");
 const userPreference_routes_1 = __importDefault(require("./routes/userPreference.routes"));
 const userVerificationToken_routes_1 = __importDefault(require("./routes/userVerificationToken.routes"));
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
+const category_routes_1 = __importDefault(require("./routes/category.routes"));
 const app = (0, express_1.default)();
 exports.app = app;
 app.use(express_1.default.json());
@@ -28,6 +29,7 @@ app.use((0, cors_1.default)());
 app.use('/api', user_routes_1.default);
 app.use('/api', artist_routes_1.default);
 app.use('/api', establishment_routes_1.default);
+app.use('/api', category_routes_1.default);
 // Rotas que não precisam de autenticação
 app.use('/auth', auth_routes_1.authRoutes); // Rotas de autenticação (register, login)
 // Rotas que não pertencem ao api

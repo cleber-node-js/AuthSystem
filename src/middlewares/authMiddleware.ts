@@ -21,7 +21,9 @@ export interface CustomRequest extends Request {
  */
 export const authMiddleware = async (req: CustomRequest, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
-  
+
+  console.log('MIddleware Calling')
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     console.error("❌ Token ausente ou inválido.");
     res.status(401).json({ message: 'Token de autenticação é necessário.' });

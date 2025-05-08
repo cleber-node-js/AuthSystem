@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { app } from './app';
 
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3008;
+const PORT = process.env.PORT;
 
 app.listen(PORT, async () => {
     try {

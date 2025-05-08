@@ -8,6 +8,7 @@ export class EstablishmentController {
   // ✅ Criar estabelecimento com imagem e novos campos
   async create(req: CustomRequest, res: Response): Promise<Response> {
     const { name, address, contact, latitude, longitude, categories, imageUrl } = req.body;
+
     const primaryOwnerId = req.userId;
   
     if (!primaryOwnerId) {
@@ -23,7 +24,7 @@ export class EstablishmentController {
         latitude,
         longitude,
         categories,
-        imageUrl // ✅ Agora armazenado corretamente
+        imageUrl
       );
   
       return res.status(201).json(establishment);

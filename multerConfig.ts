@@ -6,13 +6,13 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, "../../uploads/establishments")); // ✅ Diretório correto
   },
-  filename: (req, file, cb) => {
+  filename: function (req, file, cb) {
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 
 // Instância do `multer`
-export const upload = multer({ storage });
+export const upload = multer({ storage: storage });
 
 // ✅ Servir imagens publicamente
 import express from "express";

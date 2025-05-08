@@ -134,7 +134,8 @@ export class UserController {
    * 🔹 Atualizar um usuário
    */
   async updateUser(req: Request, res: Response) {
-    if (!req.user) {
+
+    if (!req.userId) {
       return res.status(401).json({ message: "Token de autenticação é necessário." });
     }
 
@@ -156,7 +157,8 @@ export class UserController {
    * 🔹 Soft delete de usuário
    */
   async deleteUser(req: Request, res: Response) {
-    if (!req.user) {
+    // console.log(req.userId)
+    if (!req.userId) {
       return res.status(401).json({ message: "Token de autenticação é necessário." });
     }
 

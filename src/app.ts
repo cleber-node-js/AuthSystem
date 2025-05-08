@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import cors from 'cors';
+import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import sessionRoutes from './routes/session.routes';
 import userRoutes from './routes/user.routes';
 import artistRoutes from './routes/artist.routes';
