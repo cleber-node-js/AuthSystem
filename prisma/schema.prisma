@@ -22,7 +22,7 @@ enum UserRoleEnum {
   BUSINESS
   USER
   ADMIN
-  CLIENT  // Adicione essa linha
+  CLIENT // Adicione essa linha
 }
 
 enum UserStatus {
@@ -77,21 +77,21 @@ model Category {
 }
 
 model EstablishmentCategory {
-  id               Int           @id @default(autoincrement())
-  establishmentId  Int
-  category         CategoryType
+  id              Int          @id @default(autoincrement())
+  establishmentId Int
+  category        CategoryType
 
-  establishment    Establishment @relation(fields: [establishmentId], references: [id])
+  establishment Establishment @relation(fields: [establishmentId], references: [id])
 
   @@unique([establishmentId, category])
 }
 
 model EventCategory {
-  id        Int         @id @default(autoincrement())
-  eventId   Int
-  category  CategoryType
+  id       Int          @id @default(autoincrement())
+  eventId  Int
+  category CategoryType
 
-  event     Event       @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
 
   @@unique([eventId, category])
 }
@@ -200,40 +200,40 @@ model Role {
 }
 
 model UserRole {
-  id     Int  @id @default(autoincrement())
+  id     Int @id @default(autoincrement())
   userId Int
   roleId Int
 
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId]) // Evita papéis duplicados para o mesmo usuário
   @@map("user_roles")
 }
 
 model Artist {
-  id              Int                   @id @default(autoincrement())
+  id              Int                    @id @default(autoincrement())
   name            String
   genre           String?
   bio             String?
-  status          ArtistStatus          @default(PENDING) 
-  imageUrl        String? 
+  status          ArtistStatus           @default(PENDING)
+  imageUrl        String?
   approvalMessage String?
   establishments  EstablishmentArtists[]
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
 
-  events         Event[]        @relation("ArtistEvents")
-  notifications  Notification[]
-  transactions   Transaction[]
-  subscriptions  Subscription[]
+  events        Event[]        @relation("ArtistEvents")
+  notifications Notification[]
+  transactions  Transaction[]
+  subscriptions Subscription[]
 }
 
 model Event {
   id              Int              @id @default(autoincrement())
   name            String           @db.VarChar(100)
   description     String?          @db.VarChar(500)
-  imageUrl        String?          
+  imageUrl        String?
   startDate       DateTime
   endDate         DateTime?
   latitude        Float?
@@ -255,20 +255,20 @@ model Establishment {
   name           String
   address        String?
   contact        String?
-  imageUrl        String?
+  imageUrl       String?
   latitude       Float?
   longitude      Float?
   primaryOwnerId Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  artists        EstablishmentArtists[]
-  primaryOwner User                  @relation(fields: [primaryOwnerId], references: [id])
-  events       Event[]
+  artists       EstablishmentArtists[]
+  primaryOwner  User                    @relation(fields: [primaryOwnerId], references: [id])
+  events        Event[]
   notifications Notification[]
   transactions  Transaction[]
   subscriptions Subscription[]
-  categories     EstablishmentCategory[]
+  categories    EstablishmentCategory[]
 
   @@map("establishments")
 }

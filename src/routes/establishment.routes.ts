@@ -16,7 +16,7 @@ router.post('/establishments', authMiddleware, upload.single('image'), async (re
 });
 
 // ✅ Atualizar estabelecimento — só dono autenticado
-router.put('/establishments/:id', authMiddleware, authenticateOwner, async (req, res, next) => {
+router.put('/establishments/:id', authMiddleware, authenticateOwner, upload.single('image'), async (req, res, next) => {
   try {
     await establishmentController.update(req, res);
   } catch (error) {
@@ -25,7 +25,7 @@ router.put('/establishments/:id', authMiddleware, authenticateOwner, async (req,
 });
 
 // ✅ Deletar estabelecimento — só dono autenticado
-router.delete('/establishments/:id', authMiddleware, authenticateOwner, async (req, res, next) => {
+router.delete('/establishments/:id', authMiddleware, authenticateOwner,  async (req, res, next) => {
   try {
     await establishmentController.delete(req, res);
   } catch (error) {

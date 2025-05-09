@@ -62,32 +62,60 @@ export class EventService {
         },
       },
     });
-  
+
     const grouped: Record<number, any[]> = {};
-  
+
     // Agrupa os eventos por establishmentId
     for (const event of events) {
       const establishmentId = event.establishmentId;
-  
+
       if (!grouped[establishmentId]) {
         grouped[establishmentId] = [];
       }
-  
+
       grouped[establishmentId].push(event);
     }
-  
+
     // Transforma o objeto em array organizado
     return Object.entries(grouped).map(([establishmentId, events]) => ({
       establishmentId: Number(establishmentId),
       events,
     }));
   }
-  
+
+  async getAllEventsByUserId(userId: number) {
+    return await prisma.event.findMany({
+      where: {
+        establishment: {
+          primaryOwnerId: userId,
+        },
+      },
+      include: {
+        establishment: true,
+        categories: true
+      },
+      orderBy: {
+        createdAt: 'asc', // se tiver isso
+      },
+    });
+  }
+
+
 
   // Obter evento pelo ID
-  async getEventById(eventId: number): Promise<Event | null> {
-    return prisma.event.findUnique({ where: { id: eventId } });
-  }
+ async getEventById(eventId: number) {
+  return prisma.event.findUnique({
+    where: { id: eventId },
+    include: {
+      establishment: {
+        select: {
+          primaryOwnerId: true
+        }
+      }
+    }
+  });
+}
+
 
   // Atualizar um evento existente
   async updateEvent(eventId: number, data: Partial<{
@@ -113,8 +141,20 @@ export class EventService {
     });
   }
 
-  // Excluir um evento
-  async deleteEvent(eventId: number): Promise<Event> {
-    return prisma.event.delete({ where: { id: eventId } });
+  async deleteEvent(eventId: number): Promise<void> {
+    // Deleta todas as categorias relacionadas ao evento
+    await prisma.eventCategory.deleteMany({
+      where: { eventId },
+    });
+
+    // Deleta todos os artistas relacionados ao evento (se existir essa relação)
+    await prisma.artist.deleteMany({
+      where: { id: eventId },
+    });
+
+    // Agora sim, deleta o evento
+    await prisma.event.delete({
+      where: { id: eventId },
+    });
   }
 }

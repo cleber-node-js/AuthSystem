@@ -138,7 +138,11 @@ export class EstablishmentService {
     await this.getEstablishmentById(id); // Valida existência
 
     await prisma.establishment.delete({
-      where: { id },
+      where: { id: id },
+    });
+
+     await prisma.establishmentCategory.deleteMany({
+      where: { establishmentId:id },
     });
 
     return { message: `Estabelecimento com ID ${id} foi excluído com sucesso.` };

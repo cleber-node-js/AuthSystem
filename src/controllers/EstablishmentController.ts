@@ -1,6 +1,13 @@
 import { Request, Response } from 'express';
 import { EstablishmentService } from '../services/EstablishmentService';
 import { CustomRequest } from '../middlewares/authMiddleware';
+import fs from 'fs';
+import sharp from 'sharp';
+import cloudinary from '../utils/cloudinary';
+import type { UploadApiResponse } from 'cloudinary';
+import { resolve } from 'path';
+import { CategoryType } from '@prisma/client';
+import { arrayBuffer } from 'stream/consumers';
 
 const establishmentService = new EstablishmentService();
 
@@ -8,31 +15,87 @@ export class EstablishmentController {
   // ✅ Criar estabelecimento com imagem e novos campos
   async create(req: CustomRequest, res: Response): Promise<Response> {
     const { name, address, contact, latitude, longitude, categories, imageUrl } = req.body;
-
     const primaryOwnerId = req.userId;
-  
+    const imageFile = req.file;
+
+    let parsedCategories: CategoryType[] = [];
+    if (typeof categories === 'string') {
+      try {
+        parsedCategories = JSON.parse(categories);
+      } catch (error) {
+        console.error('Erro ao fazer parse das categorias:', error);
+        parsedCategories = [];
+      }
+    }
+
+
     if (!primaryOwnerId) {
       return res.status(401).json({ error: "Usuário não autenticado." });
     }
-  
+
+    if (
+      !name ||
+      !address ||
+      !contact ||
+      !latitude ||
+      !longitude ||
+      !parsedCategories.length ||
+      !primaryOwnerId
+    ) {
+      return res.status(400).json({
+        error: 'Nome, endereço, contato, latitude, longitude, categorias e ID do proprietário são obrigatórios.',
+      });
+    }
+
+
+    if (!imageFile) {
+      return res.status(400).json({ error: 'Imagem obrigatória.' });
+    }
+
     try {
+      const arrayBuffer = await fs.promises.readFile(imageFile.path)
+      const buffer = new Uint8Array(arrayBuffer);
+      const compressedBuffer = await sharp(buffer)
+        .resize(800, 800, { fit: 'inside' })
+        .webp({ quality: 80 })
+        .toBuffer();
+
+      const result: UploadApiResponse = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: 'establishments', },
+          function (error, result) {
+            if (error) {
+              console.error('Erro ao fazer upload para o Cloudinary:', error);
+              reject(error);
+            } else {
+              if (result) {
+                resolve(result);
+              }
+              reject(new Error('Erro ao fazer upload da imagem.'));
+            }
+          }
+        ).end(compressedBuffer);
+      })
+
+      const imageUrl = result.secure_url;
+
       const establishment = await establishmentService.createEstablishment(
         name,
         address,
         contact,
         Number(primaryOwnerId),
-        latitude,
-        longitude,
-        categories,
+        parseFloat(latitude),
+        parseFloat(longitude),
+        parsedCategories,
         imageUrl
       );
-  
+
       return res.status(201).json(establishment);
     } catch (error) {
       console.error("❌ Erro ao criar estabelecimento:", error);
       return res.status(500).json({ error: "Erro ao criar estabelecimento." });
     }
-  }      
+  }
 
   // 🔍 Obter estabelecimento por ID
   async getById(req: Request, res: Response): Promise<Response> {
@@ -98,12 +161,59 @@ export class EstablishmentController {
 
     try {
       const establishment = await establishmentService.getEstablishmentById(establishmentId);
+      console.log("🛡️ Estabelecimento encontrado:", establishment);
+
       if (establishment.primaryOwnerId !== Number(userId)) {
         return res.status(403).json({ error: 'Você não tem permissão para atualizar este estabelecimento.' });
       }
 
-      const updated = await establishmentService.updateEstablishment(establishmentId, req.body);
-      return res.status(200).json(updated);
+      const { name, address, contact } = req.body;
+      const imageFile = req.file;
+      const updatedData: Record<string, any> = {};
+
+      if (name) updatedData.name = name;
+      if (address) updatedData.address = address;
+      if (contact) updatedData.contact = contact;
+
+      if (imageFile) {
+        const arrayBuffer = await fs.promises.readFile(imageFile.path)
+        const buffer = new Uint8Array(arrayBuffer);
+        const compressedBuffer = await sharp(buffer)
+          .resize(800, 800, { fit: 'inside' })
+          .webp({ quality: 80 })
+          .toBuffer();
+
+        const uploadResult: UploadApiResponse = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream(
+            { folder: 'establishments', },
+            function (error, result) {
+              if (error) {
+                console.error('Erro ao fazer upload para o Cloudinary:', error);
+                return reject(error);
+              } if (result) return resolve(result);
+              reject(new Error('Erro ao fazer upload da imagem.'));
+            }
+          ).end(compressedBuffer);
+        })
+
+        if (establishment.imageUrl) {
+          const publicIdMatch = establishment.imageUrl.match(/\/upload\/v\d+\/establishments\/(.+)\.webp/);
+          const publicId = publicIdMatch ? publicIdMatch[1] : null;
+
+          if (publicId) {
+            await cloudinary.uploader.destroy(`establishments/${publicId}`);
+            console.log('🧹 Imagem antiga deletada:', publicId);
+          } else {
+            console.warn('⚠️ ID público não encontrado na URL da imagem:', establishment.imageUrl);
+          }
+        }
+
+        updatedData.imageUrl = uploadResult.secure_url;
+
+      }
+
+      const updatedEstableshment = await establishmentService.updateEstablishment(establishmentId, updatedData);
+      return res.status(200).json(updatedEstableshment);
     } catch (error) {
       console.error('❌ Erro ao atualizar estabelecimento:', error);
       return res.status(500).json({ error: (error instanceof Error ? error.message : 'Erro desconhecido') });
@@ -125,8 +235,22 @@ export class EstablishmentController {
 
     try {
       const establishment = await establishmentService.getEstablishmentById(establishmentId);
+      console.log("🛡️ Estabelecimento encontrado:", establishment);
+
       if (establishment.primaryOwnerId !== Number(userId)) {
         return res.status(403).json({ error: 'Você não tem permissão para excluir este estabelecimento.' });
+      }
+
+      if(establishment.imageUrl) {
+        const match = establishment.imageUrl.match(/\/upload\/v\d+\/establishments\/(.+)\.webp/);
+        const publicId = match ? match[1] : null;
+
+        if(publicId) {
+          await cloudinary.uploader.destroy(`establishments/${publicId}`);
+          console.log('🧹 Imagem excluída do Cloudinary:', publicId);
+        } else {
+          console.warn('⚠️ ID público não encontrado na URL da imagem:', establishment.imageUrl);
+        }
       }
 
       const result = await establishmentService.deleteEstablishment(establishmentId);

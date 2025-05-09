@@ -15,8 +15,8 @@ const storage = multer.diskStorage({
 
 // Verificar se o arquivo é uma imagem
 const fileFilter = (req: any, file: any, cb: any) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  console.log('Tipo do arquivo recebido:', file.mimetype);
+  if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
     cb(new Error('Apenas imagens JPG, JPEG ou PNG são permitidas.'));
