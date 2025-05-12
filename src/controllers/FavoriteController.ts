@@ -5,9 +5,9 @@ const favoriteService = new FavoriteService();
 
 export class FavoriteController {
     async addFavorite(req: Request, res: Response): Promise<Response> {
-        const { userId, eventId } = req.body;
+        const { user_id, event_id } = req.body;
         try {
-            const favorite = await favoriteService.addFavorite(userId, eventId);
+            const favorite = await favoriteService.addFavorite(user_id, event_id);
             console.log('Favorite added:', favorite);  // Imprimir no terminal
             return res.status(201).json(favorite);
         } catch (error: any) {
@@ -17,9 +17,9 @@ export class FavoriteController {
     }
 
     async getUserFavorites(req: Request, res: Response): Promise<Response> {
-        const userId = Number(req.params.userId);
+        const user_id = Number(req.params.user_id);
         try {
-            const favorites = await favoriteService.getFavoritesByUser(userId);
+            const favorites = await favoriteService.getFavoritesByUser(user_id);
             console.log('User favorites:', favorites);  // Imprimir no terminal
             return res.status(200).json(favorites);
         } catch (error: any) {
@@ -52,13 +52,13 @@ export class FavoriteController {
     }
     // 🚀 Método adicionado para corrigir erro
     async checkFavorite(req: Request, res: Response): Promise<Response> {
-        const userId = Number(req.query.userId);
-        const eventId = Number(req.query.eventId);
+        const user_id = Number(req.query.user_id);
+        const event_id = Number(req.query.event_id);
         
-        console.log(`Checking favorite for userId: ${userId} and eventId: ${eventId}`);
+        console.log(`Checking favorite for user_id: ${user_id} and event_id: ${event_id}`);
         
         try {
-            const favorite = await favoriteService.checkFavorite(userId, eventId);
+            const favorite = await favoriteService.checkFavorite(user_id, event_id);
             console.log('Favorite check result:', favorite);  // Imprimir no terminal
             return res.status(200).json(favorite);
         } catch (error: any) {

@@ -3,19 +3,19 @@ import { PrismaClient, UserVerificationToken } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export class UserVerificationTokenService {
-    async createToken(userId: number, token: string, expiresAt: Date): Promise<UserVerificationToken> {
+    async createToken(user_id: number, token: string, expiresAt: Date): Promise<UserVerificationToken> {
         return prisma.userVerificationToken.create({
             data: {
-                userId,
+                user_id,
                 token,
                 expiresAt,
             },
         });
     }
 
-    async getTokenByUserId(userId: number): Promise<UserVerificationToken | null> {
+    async getTokenByUserId(user_id: number): Promise<UserVerificationToken | null> {
         return prisma.userVerificationToken.findUnique({
-            where: { userId },
+            where: { user_id },
         });
     }
 
@@ -25,9 +25,9 @@ export class UserVerificationTokenService {
         });
     }
 
-    async deleteToken(userId: number): Promise<void> {
+    async deleteToken(user_id: number): Promise<void> {
         await prisma.userVerificationToken.deleteMany({
-            where: { userId },
+            where: { user_id },
         });
     }
 
@@ -46,7 +46,7 @@ export class UserVerificationTokenService {
         }
 
         if (await this.isTokenExpired(verificationToken)) {
-            await this.deleteToken(verificationToken.userId);
+            await this.deleteToken(verificationToken.user_id);
             return false;
         }
         return true;

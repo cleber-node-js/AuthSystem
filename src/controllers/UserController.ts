@@ -50,7 +50,7 @@ export class UserController {
         return res.status(401).json({ message: "Credenciais inválidas" });
       }
 
-      const token = jwt.sign({ userId: user.id, role: user.profileType }, JWT_SECRET, { expiresIn: "1h" });
+      const token = jwt.sign({ user_id: user.id, role: user.profileType }, JWT_SECRET, { expiresIn: "1h" });
 
       res.status(200).json({ message: "Login bem-sucedido", token });
     } catch (error) {
@@ -84,7 +84,7 @@ export class UserController {
    * 🔹 Criar um usuário autenticado (Apenas CLIENTES podem criar novos usuários)
    */
   async createUser(req: Request, res: Response) {
-    if (!req.user || req.user.role !== "CLIENT") {
+    if (!req.user || req.user.role !== "client") {
       return res.status(403).json({ message: "Apenas clientes autenticados podem criar usuários." });
     }
 
@@ -103,8 +103,8 @@ export class UserController {
    */
   async getUser(req: Request, res: Response) {
     try {
-      const userId = Number(req.params.id);
-      const user = await userService.getUserById(userId);
+      const user_id = Number(req.params.id);
+      const user = await userService.getUserById(user_id);
 
       if (user === null || user === undefined) {
         return res.status(404).json({ message: "Usuário não encontrado." });
@@ -135,14 +135,14 @@ export class UserController {
    */
   async updateUser(req: Request, res: Response) {
 
-    if (!req.userId) {
+    if (!req.user_id) {
       return res.status(401).json({ message: "Token de autenticação é necessário." });
     }
 
     try {
-      const userId = Number(req.params.id);
+      const user_id = Number(req.params.id);
       const data = req.body;
-      const updatedUser = await userService.updateUser(userId, data);
+      const updatedUser = await userService.updateUser(user_id, data);
       if (updatedUser === null || updatedUser === undefined) {
         return res.status(404).json({ message: "Usuário não encontrado." });
       }
@@ -157,14 +157,14 @@ export class UserController {
    * 🔹 Soft delete de usuário
    */
   async deleteUser(req: Request, res: Response) {
-    // console.log(req.userId)
-    if (!req.userId) {
+    // console.log(req.user_id)
+    if (!req.user_id) {
       return res.status(401).json({ message: "Token de autenticação é necessário." });
     }
 
     try {
-      const userId = Number(req.params.id);
-      const deletedUser = await userService.softDeleteUser(userId);
+      const user_id = Number(req.params.id);
+      const deletedUser = await userService.softDeleteUser(user_id);
       res.status(200).json({ message: "Usuário excluído com sucesso.", user: deletedUser });
     } catch (error) {
       console.error("❌ Erro ao excluir usuário:", error);

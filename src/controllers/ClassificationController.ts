@@ -5,10 +5,10 @@ const classificationService = new ClassificationService();
 
 export class ClassificationController {
     async createClassification(req: Request, res: Response): Promise<Response> {
-        const { userId, eventId, score, comment } = req.body;
+        const { user_id, event_id, score, comment } = req.body;
 
         try {
-            const classification = await classificationService.createClassification(userId, eventId, score, comment);
+            const classification = await classificationService.createClassification(user_id, event_id, score, comment);
             console.log(`Classificação criada:`, classification);
             return res.status(201).json(classification);
         } catch (error: any) {
@@ -46,10 +46,10 @@ export class ClassificationController {
 
     async updateClassification(req: Request, res: Response): Promise<Response> {
         const id = Number(req.params.id);
-        const { userId, eventId, score, comment } = req.body;
+        const { user_id, event_id, score, comment } = req.body;
 
         try {
-            const updatedClassification = await classificationService.updateClassification(id, userId, eventId, score, comment);
+            const updatedClassification = await classificationService.updateClassification(id, user_id, event_id, score, comment);
             console.log(`Classificação ID ${id} atualizada:`, updatedClassification);
             return res.status(200).json(updatedClassification);
         } catch (error: any) {

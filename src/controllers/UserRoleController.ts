@@ -6,15 +6,15 @@ const userRoleService = new UserRoleService();
 export class UserRoleController {
     async createUserRole(req: Request, res: Response): Promise<void> {
         console.log(`📩 Requisição recebida: POST /user-roles`, req.body);
-        const { userId, roleId } = req.body;
+        const { user_id, role_id } = req.body;
 
-        if (typeof userId !== 'number' || typeof roleId !== 'number' || isNaN(userId) || isNaN(roleId)) {
-            res.status(400).json({ error: "Invalid userId or roleId. They must be numbers." });
+        if (typeof user_id !== 'number' || typeof role_id !== 'number' || isNaN(user_id) || isNaN(role_id)) {
+            res.status(400).json({ error: "Invalid user_id or role_id. They must be numbers." });
             return;
         }
 
         try {
-            const userRole = await userRoleService.createUserRole(userId, roleId);
+            const userRole = await userRoleService.createUserRole(user_id, role_id);
             if (!userRole) {
                 console.log("❌ Associação UserRole já existe.");
                 res.status(409).json({ error: "Associação UserRole já existe" });
@@ -41,18 +41,18 @@ export class UserRoleController {
     }
 
     async getUserRoleById(req: Request, res: Response): Promise<void> {
-        const userId = parseInt(req.params.id, 10);
-        const roleId = parseInt(req.query.roleId as string, 10);
-        console.log(`📩 Requisição recebida: GET /user-roles/${userId}?roleId=${roleId}`);
+        const user_id = parseInt(req.params.id, 10);
+        const role_id = parseInt(req.query.role_id as string, 10);
+        console.log(`📩 Requisição recebida: GET /user-roles/${user_id}?role_id=${role_id}`);
 
-        if (isNaN(userId) || isNaN(roleId)) {
-            res.status(400).json({ error: "Invalid userId or roleId" });
+        if (isNaN(user_id) || isNaN(role_id)) {
+            res.status(400).json({ error: "Invalid user_id or role_id" });
             return;
         }
         try {
-            const userRole = await userRoleService.getUserRoleById(userId, roleId);
+            const userRole = await userRoleService.getUserRoleById(user_id, role_id);
             if (!userRole) {
-                console.log(`⚠️ Associação UserRole não encontrada para ID ${userId} e roleId ${roleId}`);
+                console.log(`⚠️ Associação UserRole não encontrada para ID ${user_id} e role_id ${role_id}`);
                 res.status(404).json({ error: "Associação UserRole não encontrada" });
                 return;
             }
@@ -65,18 +65,18 @@ export class UserRoleController {
     }
 
     async updateUserRole(req: Request, res: Response): Promise<void> {
-        const userId = parseInt(req.params.id, 10);
-        const { roleId, newUserId, newRoleId } = req.body;
+        const user_id = parseInt(req.params.id, 10);
+        const { role_id, newuser_id, newRole_id } = req.body;
 
-        if (isNaN(userId) || typeof roleId !== 'number' || typeof newUserId !== 'number' || typeof newRoleId !== 'number' || isNaN(newUserId) || isNaN(newRoleId)) {
-            res.status(400).json({ error: "Invalid userId, roleId or newUserId or newRoleId.  They must be numbers." });
+        if (isNaN(user_id) || typeof role_id !== 'number' || typeof newuser_id !== 'number' || typeof newRole_id !== 'number' || isNaN(newuser_id) || isNaN(newRole_id)) {
+            res.status(400).json({ error: "Invalid user_id, role_id or newuser_id or newRole_id.  They must be numbers." });
             return;
         }
 
-        console.log(`📩 Requisição recebida: PUT /user-roles/${userId}`, req.body);
+        console.log(`📩 Requisição recebida: PUT /user-roles/${user_id}`, req.body);
 
         try {
-            const updatedUserRole = await userRoleService.updateUserRole(userId, roleId, newUserId, newRoleId);
+            const updatedUserRole = await userRoleService.updateUserRole(user_id, role_id, newuser_id, newRole_id);
             console.log(`🔄 Associação atualizada:`, updatedUserRole);
             res.status(200).json(updatedUserRole);
         } catch (error) {
@@ -86,19 +86,19 @@ export class UserRoleController {
     }
 
     async deleteUserRole(req: Request, res: Response): Promise<void> {
-        const userId = parseInt(req.params.id, 10);
-        const roleId = parseInt(req.query.roleId as string, 10);
+        const user_id = parseInt(req.params.id, 10);
+        const role_id = parseInt(req.query.role_id as string, 10);
 
-        if (isNaN(userId) || isNaN(roleId)) {
-            res.status(400).json({ error: "Invalid userId or roleId" });
+        if (isNaN(user_id) || isNaN(role_id)) {
+            res.status(400).json({ error: "Invalid user_id or roleId" });
             return;
         }
 
-        console.log(`📩 Requisição recebida: DELETE /user-roles/${userId}?roleId=${roleId}`);
+        console.log(`📩 Requisição recebida: DELETE /user-roles/${user_id}?roleId=${role_id}`);
 
         try {
-            await userRoleService.deleteUserRole(userId, roleId);
-            console.log(`🗑️ Associação UserRole deletada: ID ${userId}, Role ID ${roleId}`);
+            await userRoleService.deleteUserRole(user_id, role_id);
+            console.log(`🗑️ Associação UserRole deletada: ID ${user_id}, Role ID ${role_id}`);
             res.status(200).json({ message: "Associação UserRole deletada com sucesso" });
         } catch (error) {
             console.error("❌ Erro ao deletar associação UserRole:", error);

@@ -14,13 +14,13 @@ interface Event {
     endDate?: Date;
     latitude: number;
     longitude: number;
-    establishmentId: number;
+    establishment_id: number;
     categories: string[];
     artists: number[];
 }
 
 interface EventGroupedByEstablishment {
-    establishmentId: number;
+    establishment_id: number;
     events: Event[];
 }
 
@@ -29,7 +29,7 @@ const eventService = new EventService();
 export class EventController {
     // Criar um novo evento
     async create(req: Request, res: Response): Promise<Response> {
-        const { name, description, startDate, endDate, establishmentId, categories, artists } = req.body;
+        const { name, description, startDate, endDate, establishment_id, categories, artists } = req.body;
 
         let parsedCategories: string[] = [];
         if (typeof categories === 'string') {
@@ -68,7 +68,7 @@ export class EventController {
             // Fazendo upload da imagem para o Cloudinary
             const result: UploadApiResponse = await new Promise((resolve, reject) => {
                 cloudinary.uploader.upload_stream({
-                    tags: [`${establishmentId}`],
+                    tags: [`${establishment_id}`],
                     folder: 'events',
                 }, function (error, result) {
                     if (error) {
@@ -92,7 +92,7 @@ export class EventController {
                 description,
                 startDate: new Date(startDate),
                 endDate: endDate ? new Date(endDate) : undefined,
-                establishmentId: Number(establishmentId),
+                establishment_id: Number(establishment_id),
                 imageUrl, // URL da imagem no Cloudinary
                 latitude: Number(req.body.latitude),
                 longitude: Number(req.body.longitude),
@@ -110,14 +110,14 @@ export class EventController {
 
     // Atualizar um evento existente
     async update(req: Request, res: Response): Promise<Response> {
-        const eventId = Number(req.params.id);
-        const userId = req.userId;
+        const event_id = Number(req.params.id);
+        const user_id = req.user_id;
 
 
         try {
             // Recupera o evento existente
-            const existingEvent = await eventService.getEventById(eventId);
-            if (existingEvent?.establishment.primaryOwnerId !== Number(userId)) {
+            const existingEvent = await eventService.getEventById(event_id);
+            if (existingEvent?.establishment.primaryOwner_id !== Number(user_id)) {
                 return res.status(403).json({ error: 'Você não tem permissão para atualizar este estabelecimento.' });
             }
             const { name, description } = req.body;
@@ -173,9 +173,9 @@ export class EventController {
             }
 
             // Atualizar o evento com os novos dados
-            const updatedEvent = await eventService.updateEvent(eventId, updatedData);
+            const updatedEvent = await eventService.updateEvent(event_id, updatedData);
 
-            console.log(`Evento ${eventId} atualizado:`, updatedEvent);
+            console.log(`Evento ${event_id} atualizado:`, updatedEvent);
             return res.status(200).json(updatedEvent);
         } catch (error: any) {
             console.error('Erro ao atualizar evento:', error.message);
@@ -185,12 +185,12 @@ export class EventController {
 
     // Excluir um evento
     async delete(req: Request, res: Response): Promise<Response> {
-        const eventId = Number(req.params.id);
-        console.log('ID do evento a ser excluído:', eventId);
+        const event_id = Number(req.params.id);
+        console.log('ID do evento a ser excluído:', event_id);
 
         try {
             // Recupera o evento existente para excluir a imagem do Cloudinary
-            const existingEvent = await eventService.getEventById(eventId);
+            const existingEvent = await eventService.getEventById(event_id);
             if (existingEvent && existingEvent.imageUrl) {
                 const publicId = existingEvent.imageUrl.split('/').pop()?.split('.')[0];
                 if (publicId) {
@@ -199,8 +199,8 @@ export class EventController {
             }
 
             // Exclui o evento
-            await eventService.deleteEvent(eventId);
-            console.log(`Evento ${eventId} excluído.`);
+            await eventService.deleteEvent(event_id);
+            console.log(`Evento ${event_id} excluído.`);
             return res.status(200).json({ message: 'Evento excluído com sucesso' });
         } catch (error: any) {
             console.error('Erro ao excluir evento:', error.message);
@@ -209,14 +209,14 @@ export class EventController {
     }
 
     async getAll(req: Request, res: Response): Promise<Response> {
-        const userId = req.userId;
-        console.log('ID do usuário autenticado:', userId);
+        const user_id = req.user_id;
+        console.log('ID do usuário autenticado:', user_id);
 
-        if (!userId) {
+        if (!user_id) {
             return res.status(401).json({ error: 'Usuário não autenticado.' });
         }
         try {
-            const events = await eventService.getAllEventsByUserId(Number(userId));
+            const events = await eventService.getAllEventsByUserId(Number(user_id));
             // console.log('Eventos recuperados:', events);
             return res.status(200).json(events);
         } catch (error: any) {
@@ -252,14 +252,14 @@ export class EventController {
 
     // Obter evento pelo ID
     async getById(req: Request, res: Response): Promise<Response> {
-        const eventId = Number(req.params.id);
+        const event_id = Number(req.params.id);
         try {
-            const event = await eventService.getEventById(eventId);
+            const event = await eventService.getEventById(event_id);
             if (!event) {
-                console.warn(`Evento com ID ${eventId} não encontrado.`);
+                console.warn(`Evento com ID ${event_id} não encontrado.`);
                 return res.status(404).json({ error: 'Evento não encontrado' });
             }
-            console.log(`Evento ${eventId} recuperado:`, event);
+            console.log(`Evento ${event_id} recuperado:`, event);
             return res.status(200).json(event);
         } catch (error: any) {
             console.error('Erro ao recuperar evento:', error.message);

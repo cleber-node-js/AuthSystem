@@ -4,21 +4,21 @@ const prisma = new PrismaClient();
 
 export class UserPreferenceService {
 
-    async getPreferencesByUserId(userId: number): Promise<UserPreference | null> {
+    async getPreferencesByuser_id(user_id: number): Promise<UserPreference | null> {
         const userPreference = await prisma.userPreference.findFirst({
-            where: { userId }, // Buscar por userId usando findFirst
+            where: { user_id }, // Buscar por user_id usando findFirst
         });
         return userPreference;
     }
 
     async createPreferences(
-        userId: number,
+        user_id: number,
         interests: string,
         favoriteCategories: string
     ): Promise<UserPreference> {
         return prisma.userPreference.create({
             data: {
-                userId,
+                user_id,
                 interests,
                 favoriteCategories,
             },

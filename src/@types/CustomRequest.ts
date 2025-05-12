@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { UserProfileType, UserStatus } from '@prisma/client';
+import {  UserStatus } from '@prisma/client';
 
 /**
  * Interface personalizada para o usuário autenticado no sistema
@@ -10,7 +10,7 @@ export interface CustomUser {
   email: string;
   phone: string | null;  
   password: string;
-  profileType: UserProfileType;
+  profileType: string;
   status: UserStatus;
   role: string;  // ✅ Adicionado para corresponder ao tipo esperado
   createdAt: Date;

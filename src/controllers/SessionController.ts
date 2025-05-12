@@ -11,8 +11,8 @@ export class SessionController {
     // Criar uma nova sessão
     public async createSession(req: Request, res: Response) {
         try {
-            const { userId } = req.body;
-            const newSession = await this.sessionService.createSession(userId);
+            const { user_id } = req.body;
+            const newSession = await this.sessionService.createSession(user_id);
 
             console.log(`✅ Sessão criada com sucesso:`, newSession);
 

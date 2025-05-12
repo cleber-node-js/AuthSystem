@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { PrismaClient, User, UserProfileType, UserStatus, Establishment } from '@prisma/client';
+import { PrismaClient, User, UserStatus, Establishment } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -21,12 +21,12 @@ export class UserService {
   /**
    * 🔹 Buscar usuário por ID
    */
-  async getUserById(userId: number): Promise<User | null> {
+  async getUserById(user_id: number): Promise<User | null> {
     try {
-      const user = await prisma.user.findUnique({ where: { id: userId } });
+      const user = await prisma.user.findUnique({ where: { id: user_id } });
       return user;
     } catch (error) {
-      console.error(`❌ Erro ao buscar usuário ID ${userId}:`, error);
+      console.error(`❌ Erro ao buscar usuário ID ${user_id}:`, error);
       throw new Error("Erro ao buscar usuário.");
     }
   }
@@ -34,15 +34,15 @@ export class UserService {
   /**
    * 🔹 Atualizar usuário
    */
-  async updateUser(userId: number, data: Partial<User>): Promise<User> {
+  async updateUser(user_id: number, data: Partial<User>): Promise<User> {
     try {
       const updatedUser = await prisma.user.update({
-        where: { id: userId },
+        where: { id: user_id },
         data,
       });
       return updatedUser;
     } catch (error) {
-      console.error(`❌ Erro ao atualizar usuário ID ${userId}:`, error);
+      console.error(`❌ Erro ao atualizar usuário ID ${user_id}:`, error);
       throw new Error("Erro ao atualizar usuário.");
     }
   }
@@ -50,14 +50,14 @@ export class UserService {
   /**
    * 🔹 Soft delete (marca o usuário como excluído, sem remover do banco)
    */
-  async softDeleteUser(userId: number): Promise<User> {
+  async softDeleteUser(user_id: number): Promise<User> {
     try {
       const deletedUser = await prisma.user.delete({
-        where: { id: userId },
+        where: { id: user_id },
       });
       return deletedUser;
     } catch (error) {
-      console.error(`❌ Erro ao excluir usuário ID ${userId}:`, error);
+      console.error(`❌ Erro ao excluir usuário ID ${user_id}:`, error);
       throw new Error("Erro ao excluir usuário.");
     }
   }
@@ -69,7 +69,7 @@ export class UserService {
     email: string,
     password: string,
     name: string,
-    userType: 'CLIENT' | 'ARTIST' | 'ESTABLISHMENT',
+    userType: 'client' | 'artist' | 'business',
     additionalData?: any
   ): Promise<User> {
     try {
@@ -83,22 +83,22 @@ export class UserService {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      let profileType: UserProfileType;
+      let profileType;
 
       switch (userType) {
-        case 'ARTIST':
-          profileType = UserProfileType.ARTIST;
+        case 'artist':
+          profileType = 1;
           break;
-        case 'ESTABLISHMENT':
-          profileType = UserProfileType.BUSINESS;
+        case 'business':
+          profileType = 2;
           break;
         default:
-          profileType = UserProfileType.CLIENT;
+          profileType = 3;
       }
 
-      let userRole = await prisma.role.findUnique({ where: { name: 'USER' } });
+      let userRole = await prisma.role.findUnique({ where: { name: 'user' } });
       if (!userRole) {
-        userRole = await prisma.role.create({ data: { name: 'USER' } });
+        userRole = await prisma.role.create({ data: { name: 'user' } });
       }
 
       const user = await prisma.user.create({
@@ -116,7 +116,7 @@ export class UserService {
 
       console.log(`✅ Usuário criado com ID: ${user.id}`);
 
-      if (userType === 'ARTIST') {
+      if (userType === 'artist') {
         if (!additionalData || !additionalData.establishmentId) {
           throw new Error('Dados adicionais para artista são obrigatórios.');
         }
@@ -135,7 +135,7 @@ export class UserService {
               name: additionalData.establishmentName,
               address: additionalData.address,
               contact: additionalData.contact,
-              primaryOwnerId: user.id,
+              primaryOwner_id: user.id,
             },
           });
 
@@ -158,7 +158,7 @@ export class UserService {
         });
 
         console.log(`🎨 Artista ${additionalData.name} registrado no estabelecimento ${establishment.name}`);
-      } else if (userType === 'ESTABLISHMENT') {
+      } else if (userType === 'business') {
         if (!additionalData) {
           throw new Error('Dados adicionais para estabelecimento são obrigatórios.');
         }
@@ -168,7 +168,7 @@ export class UserService {
             name: additionalData.name,
             address: additionalData.address,
             contact: additionalData.contact,
-            primaryOwnerId: user.id,
+            primaryOwner_id: user.id,
           },
         });
 

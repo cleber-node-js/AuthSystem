@@ -1,4 +1,4 @@
-import { PrismaClient, Establishment, ArtistStatus, CategoryType } from '@prisma/client';
+import { PrismaClient, Establishment, ArtistStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -15,15 +15,25 @@ export class EstablishmentService {
     name: string,
     address: string | null,
     contact: string | null,
-    primaryOwnerId: number,
+    primaryOwner_id: number,
     latitude: number,
     longitude: number,
-    categories: CategoryType[],
+    categories: string,
     imageUrl?: string // <-- novo parâmetro opcional
   ): Promise<Establishment> {
-    if (!name || !primaryOwnerId || !latitude || !longitude || categories.length === 0) {
+    if (!name || !primaryOwner_id || !latitude || !longitude || categories.length === 0) {
       throw new Error("Nome, ID do proprietário, localização e categorias são obrigatórios.");
     }
+
+    const categoryNames = categories.split(',').map(c => c.trim());
+    const categoryEntities = await prisma.category.findMany({
+      where: {
+        name: {
+          in: categoryNames
+        }
+      }
+    })
+
 
     return prisma.establishment.create({
       data: {
@@ -32,14 +42,19 @@ export class EstablishmentService {
         contact,
         latitude,
         longitude,
-        primaryOwnerId,
+        primaryOwner_id,
         imageUrl,
         categories: {
-          create: categories.map(category => ({
-            category
-          })),
+          create: categoryEntities.map(cat => ({
+            category: {
+              connect: { id: cat.id }
+            }
+          }))
         },
       },
+      include: {
+        categories: true,
+      }
     });
   }
 
@@ -73,15 +88,15 @@ export class EstablishmentService {
   }
 
   // 🔎 Buscar artistas por estabelecimento e status
-  async getArtistsByEstablishmentAndStatus(establishmentId: number, status?: string): Promise<any[]> {
-    if (!Number.isInteger(establishmentId) || establishmentId <= 0) {
+  async getArtistsByEstablishmentAndStatus(establishment_id: number, status?: string): Promise<any[]> {
+    if (!Number.isInteger(establishment_id) || establishment_id <= 0) {
       throw new Error('ID do estabelecimento inválido.');
     }
 
     const whereClause: any = {
       establishments: {
         some: {
-          establishmentId,
+          establishment_id,
         },
       },
     };
@@ -104,14 +119,14 @@ export class EstablishmentService {
   // ✏️ Atualizar um estabelecimento
   async updateEstablishment(
     id: number,
-    data: Partial<{ 
-      name: string; 
-      address: string; 
-      contact: string; 
-      primaryOwnerId: number; 
-      latitude: number; 
-      longitude: number; 
-      categories: CategoryType[] 
+    data: Partial<{
+      name: string;
+      address: string;
+      contact: string;
+      primaryOwner_id: number;
+      latitude: number;
+      longitude: number;
+      categories: string
     }>
   ): Promise<Establishment> {
     await this.getEstablishmentById(id); // Valida existência
@@ -122,8 +137,8 @@ export class EstablishmentService {
         ...data,
         categories: data.categories ? {
           deleteMany: {}, // Exclui todas as categorias existentes
-          create: data.categories.map(category => ({
-            category
+          create: data.categories.split(',').map(category => ({
+            category: { connect: { name: category.trim() } }
           })), // Adiciona novas categorias
         } : undefined,
       },
@@ -141,8 +156,8 @@ export class EstablishmentService {
       where: { id: id },
     });
 
-     await prisma.establishmentCategory.deleteMany({
-      where: { establishmentId:id },
+    await prisma.establishmentCategory.deleteMany({
+      where: { establishment_id: id },
     });
 
     return { message: `Estabelecimento com ID ${id} foi excluído com sucesso.` };
@@ -150,36 +165,36 @@ export class EstablishmentService {
 
   // 🎤 Atualizar o status de um artista no relacionamento com o estabelecimento
   async updateArtistStatus(
-    establishmentId: number,
-    artistId: number,
+    establishment_id: number,
+    artist_id: number,
     status: ArtistStatus
   ): Promise<{ message: string }> {
-    if (!Number.isInteger(establishmentId) || establishmentId <= 0 ||
-        !Number.isInteger(artistId) || artistId <= 0) {
+    if (!Number.isInteger(establishment_id) || establishment_id <= 0 ||
+      !Number.isInteger(artist_id) || artist_id <= 0) {
       throw new Error('IDs do estabelecimento ou do artista inválidos.');
     }
 
     const relation = await prisma.establishmentArtists.findFirst({
       where: {
-        artistId,
-        establishmentId,
+        artist_id,
+        establishment_id,
       },
     });
 
     if (!relation) {
-      throw new NotFoundError(`Artista com ID ${artistId} não está vinculado ao estabelecimento ${establishmentId}.`);
+      throw new NotFoundError(`Artista com ID ${artist_id} não está vinculado ao estabelecimento ${establishment_id}.`);
     }
 
     await prisma.establishmentArtists.update({
       where: {
-        artistId_establishmentId: {
-          artistId,
-          establishmentId,
+        artist_id_establishment_id: {
+          artist_id,
+          establishment_id,
         },
       },
       data: { status },
     });
 
-    return { message: `Status do artista com ID ${artistId} no estabelecimento ${establishmentId} atualizado para ${status}.` };
+    return { message: `Status do artista com ID ${artist_id} no estabelecimento ${establishment_id} atualizado para ${status}.` };
   }
 }

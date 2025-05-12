@@ -7,24 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserProfileType {
-  ADMIN
-  CLIENT
-  GUEST
-  USER
-  ARTIST
-  BUSINESS
-  DEFAULT
-}
-
-enum UserRoleEnum {
-  ARTIST
-  BUSINESS
-  USER
-  ADMIN
-  CLIENT // Adicione essa linha
-}
-
 enum UserStatus {
   ACTIVE
   PENDING
@@ -61,61 +43,54 @@ enum SubscriptionStatus {
   PAST_DUE
 }
 
-enum CategoryType {
-  FOOD
-  DRINK
-  MUSIC
-  DANCE
-  ART
-  CULTURE
-  OTHER
-}
-
 model Category {
-  id       Int    @id @default(autoincrement())
-  name     String @unique
-  imageUrl String
+  id                      Int                     @id @default(autoincrement())
+  name                    String                  @unique
+  imageUrl                String
+  eventCategories         EventCategory[] // Opposite relation field
+  establishmentCategories EstablishmentCategory[] // Opposite relation field for EstablishmentCategory
 }
 
 model EstablishmentCategory {
-  id              Int          @id @default(autoincrement())
-  establishmentId Int
-  category        CategoryType
+  id               Int      @id @default(autoincrement())
+  establishment_id Int
+  category_id      Int
+  category         Category @relation(fields: [category_id], references: [id])
 
-  establishment Establishment @relation(fields: [establishmentId], references: [id])
+  establishment Establishment @relation(fields: [establishment_id], references: [id])
 
-  @@unique([establishmentId, category])
+  @@unique([establishment_id, category_id])
 }
 
 model EventCategory {
-  id       Int          @id @default(autoincrement())
-  eventId  Int
-  category CategoryType
+  id          Int      @id @default(autoincrement())
+  event_id    Int
+  category_id Int
+  category    Category @relation(fields: [category_id], references: [id])
 
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [event_id], references: [id])
 
-  @@unique([eventId, category])
+  @@unique([event_id, category_id])
 }
 
 model User {
-  id                 Int                     @id @default(autoincrement())
-  name               String                  @db.VarChar(100)
-  email              String                  @unique @db.VarChar(100)
-  phone              String?                 @unique @db.VarChar(15)
-  password           String                  @db.VarChar(255)
-  profileType        UserProfileType         @default(CLIENT) // Define CLIENT como padrão
-  status             UserStatus              @default(ACTIVE)
-  verificationTokens UserVerificationToken[] @relation("UserVerificationTokenToUser")
-  preferences        UserPreference[]
-  favorites          Favorite[]
-  classifications    Classification[]
-  sessions           Session[]
-  createdAt          DateTime                @default(now())
-  updatedAt          DateTime                @default(now())
-  deletedAt          DateTime?
-  roles              UserRole[] // Relacionamento com UserRole
-  ratings            Rating[] // Considerando renomear se necessário
-  establishments     Establishment[]
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(100)
+  email           String           @unique @db.VarChar(100)
+  phone           String?          @unique @db.VarChar(15)
+  password        String           @db.VarChar(255)
+  profileType     Int
+  status          UserStatus       @default(ACTIVE)
+  preferences     UserPreference[]
+  favorites       Favorite[]
+  classifications Classification[]
+  sessions        Session[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @default(now())
+  deletedAt       DateTime?
+  roles           UserRole[] // Relacionamento com UserRole
+  ratings         Rating[] // Considerando renomear se necessário
+  establishments  Establishment[]
 
   UserVerificationToken UserVerificationToken[]
 
@@ -128,68 +103,66 @@ model User {
 
 model Session {
   id           Int    @id @default(autoincrement())
-  userId       Int
+  user_id      Int
   sessionToken String @unique @db.VarChar(255)
-  user         User   @relation(fields: [userId], references: [id])
+  user         User   @relation(fields: [user_id], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
 
 model Classification {
-  id      Int     @id @default(autoincrement())
-  userId  Int
-  eventId Int
-  score   Int
-  comment String? @db.VarChar(500)
-  user    User    @relation(fields: [userId], references: [id])
-  event   Event   @relation(fields: [eventId], references: [id])
+  id       Int     @id @default(autoincrement())
+  user_id  Int
+  event_id Int
+  score    Int
+  comment  String? @db.VarChar(500)
+  user     User    @relation(fields: [user_id], references: [id])
+  event    Event   @relation(fields: [event_id], references: [id])
 
   createdAt DateTime @default(now())
 }
 
 model UserPreference {
   id                 Int    @id @default(autoincrement())
-  userId             Int
+  user_id            Int
   interests          String @db.VarChar(500)
   favoriteCategories String @db.VarChar(500)
-  user               User   @relation(fields: [userId], references: [id])
+  user               User   @relation(fields: [user_id], references: [id])
 
   createdAt DateTime @default(now())
 }
 
 model Favorite {
   id        Int      @id @default(autoincrement())
-  userId    Int
-  eventId   Int
+  user_id   Int
+  event_id  Int
   createdAt DateTime @default(now())
-  Event     Event[]
-  User      User[]
+  event     Event    @relation(fields: [event_id], references: [id])
+  User      User     @relation(fields: [user_id], references: [id])
 
-  @@unique([userId, eventId]) // Define a chave única composta
+  @@unique([user_id, event_id])
 }
 
 model Rating {
-  id      Int     @id @default(autoincrement())
-  eventId Int
-  userId  Int
-  score   Int
-  comment String? @db.VarChar(500)
-  event   Event   @relation(fields: [eventId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  id       Int     @id @default(autoincrement())
+  event_id Int
+  user_id  Int
+  score    Int
+  comment  String? @db.VarChar(500)
+  event    Event   @relation(fields: [event_id], references: [id])
+  user     User    @relation(fields: [user_id], references: [id])
 
   createdAt DateTime @default(now())
 }
 
 model UserVerificationToken {
   id        Int      @id @default(autoincrement())
-  userId    Int      @unique
+  user_id   Int      @unique
   token     String   @unique @db.VarChar(255)
   createdAt DateTime @default(now())
   expiresAt DateTime
-  user      User     @relation(fields: [userId], references: [id])
-
-  User User[] @relation("UserVerificationTokenToUser")
+  user      User     @relation(fields: [user_id], references: [id])
 }
 
 model Role {
@@ -201,14 +174,14 @@ model Role {
 }
 
 model UserRole {
-  id     Int @id @default(autoincrement())
-  userId Int
-  roleId Int
+  id      Int @id @default(autoincrement())
+  user_id Int
+  role_id Int
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
 
-  @@unique([userId, roleId]) // Evita papéis duplicados para o mesmo usuário
+  @@unique([user_id, role_id]) // Evita papéis duplicados para o mesmo usuário
   @@map("user_roles")
 }
 
@@ -231,21 +204,21 @@ model Artist {
 }
 
 model Event {
-  id              Int              @id @default(autoincrement())
-  name            String           @db.VarChar(100)
-  description     String?          @db.VarChar(500)
-  imageUrl        String?
-  startDate       DateTime
-  endDate         DateTime?
-  latitude        Float?
-  longitude       Float?
-  establishmentId Int
-  establishment   Establishment    @relation(fields: [establishmentId], references: [id])
-  favorites       Favorite[]
-  classifications Classification[]
-  ratings         Rating[]
-  artists         Artist[]         @relation("ArtistEvents")
-  categories      EventCategory[]
+  id               Int              @id @default(autoincrement())
+  name             String           @db.VarChar(100)
+  description      String?          @db.VarChar(500)
+  imageUrl         String?
+  startDate        DateTime
+  endDate          DateTime?
+  latitude         Float?
+  longitude        Float?
+  establishment_id Int
+  establishment    Establishment    @relation(fields: [establishment_id], references: [id])
+  favorites        Favorite[]
+  classifications  Classification[]
+  ratings          Rating[]
+  artists          Artist[]         @relation("ArtistEvents")
+  categories       EventCategory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -259,12 +232,12 @@ model Establishment {
   imageUrl       String?
   latitude       Float?
   longitude      Float?
-  primaryOwnerId Int
+  primaryOwner_id Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   artists       EstablishmentArtists[]
-  primaryOwner  User                    @relation(fields: [primaryOwnerId], references: [id])
+  primaryOwner  User                    @relation(fields: [primaryOwner_id], references: [id])
   events        Event[]
   notifications Notification[]
   transactions  Transaction[]
@@ -275,78 +248,78 @@ model Establishment {
 }
 
 model EstablishmentArtists {
-  artistId        Int
-  establishmentId Int
-  status          ArtistStatus @default(PENDING)
-  approvalMessage String?
+  artist_id        Int
+  establishment_id Int
+  status           ArtistStatus @default(PENDING)
+  approvalMessage  String?
 
-  artist        Artist        @relation(fields: [artistId], references: [id])
-  establishment Establishment @relation(fields: [establishmentId], references: [id])
+  artist        Artist        @relation(fields: [artist_id], references: [id])
+  establishment Establishment @relation(fields: [establishment_id], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@id([artistId, establishmentId])
+  @@id([artist_id, establishment_id])
   @@map("establishment_artists") // Nome real da tabela no banco (opcional)
 }
 
 model Notification {
-  id              Int                  @id @default(autoincrement())
-  userId          Int? // User that receives the notification.  Can be null if not user-specific.
-  artistId        Int? // Artist that receives the notification.  Can be null if not artist-specific.
-  establishmentId Int? // Establishment that receives the notification.  Can be null if not establishment-specific.
-  category        NotificationCategory // Enum for notification type
-  title           String               @db.VarChar(255) // Title of the notification
-  content         String               @db.Text // Content of the notification.
-  read            Boolean              @default(false) // Has the user read the notification?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  id               Int                  @id @default(autoincrement())
+  user_id          Int? // User that receives the notification.  Can be null if not user-specific.
+  artist_id        Int? // Artist that receives the notification.  Can be null if not artist-specific.
+  establishment_id Int? // Establishment that receives the notification.  Can be null if not establishment-specific.
+  category         NotificationCategory // Enum for notification type
+  title            String               @db.VarChar(255) // Title of the notification
+  content          String               @db.Text // Content of the notification.
+  read             Boolean              @default(false) // Has the user read the notification?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
   // Relations (Optional - based on your specific logic)
-  user          User?          @relation(fields: [userId], references: [id])
-  artist        Artist?        @relation(fields: [artistId], references: [id])
-  establishment Establishment? @relation(fields: [establishmentId], references: [id])
+  user          User?          @relation(fields: [user_id], references: [id])
+  artist        Artist?        @relation(fields: [artist_id], references: [id])
+  establishment Establishment? @relation(fields: [establishment_id], references: [id])
 }
 
 model Transaction {
-  id              Int      @id @default(autoincrement())
-  userId          Int?
-  artistId        Int?
-  establishmentId Int?
-  subscriptionId  Int?
-  amount          Float
-  currency        String
-  paymentMethod   String
-  transactionId   String   @unique
-  status          String // 'pending', 'approved', 'declined', 'refunded'
-  receiptUrl      String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               Int               @id @default(autoincrement())
+  user_id          Int?
+  artist_id        Int?
+  establishment_id Int?
+  subscription_id  Int?
+  amount           Float
+  currency         String
+  paymentMethod    String
+  transaction_id   String            @unique
+  status           TransactionStatus
+  receiptUrl       String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
-  user          User?          @relation(fields: [userId], references: [id])
-  artist        Artist?        @relation(fields: [artistId], references: [id])
-  establishment Establishment? @relation(fields: [establishmentId], references: [id])
-  subscription  Subscription?  @relation(fields: [subscriptionId], references: [id])
+  user          User?          @relation(fields: [user_id], references: [id])
+  artist        Artist?        @relation(fields: [artist_id], references: [id])
+  establishment Establishment? @relation(fields: [establishment_id], references: [id])
+  subscription  Subscription?  @relation(fields: [subscription_id], references: [id])
 }
 
 model Subscription {
-  id              Int       @id @default(autoincrement())
-  userId          Int
-  artistId        Int?
-  establishmentId Int?
-  planId          Int
-  plan            String
-  startDate       DateTime
-  endDate         DateTime
-  status          String // 'active', 'inactive', 'canceled', 'past_due'
-  nextPaymentDate DateTime?
-  amount          Float
-  currency        String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id               Int                @id @default(autoincrement())
+  user_id          Int
+  artist_id        Int?
+  establishment_id Int?
+  planId           Int
+  plan             String
+  startDate        DateTime
+  endDate          DateTime
+  status           SubscriptionStatus
+  nextPaymentDate  DateTime?
+  amount           Float
+  currency         String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
-  user          User           @relation(fields: [userId], references: [id])
-  artist        Artist?        @relation(fields: [artistId], references: [id])
-  establishment Establishment? @relation(fields: [establishmentId], references: [id])
+  user          User           @relation(fields: [user_id], references: [id])
+  artist        Artist?        @relation(fields: [artist_id], references: [id])
+  establishment Establishment? @relation(fields: [establishment_id], references: [id])
   transactions  Transaction[]
 }

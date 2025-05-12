@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { PrismaClient, User, UserProfileType, UserStatus, UserRoleEnum } from '@prisma/client';
+import { PrismaClient, User, UserStatus } from '@prisma/client';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -42,8 +42,8 @@ export class AuthService {
   /**
    * 🔹 Registro de usuários com associação ao papel correto.
    */
-  async register(email: string, password: string, role: UserRoleEnum): Promise<User> {
-    const validRoles: UserRoleEnum[] = ["ARTIST", "BUSINESS", "USER", "ADMIN", "CLIENT"]; // ✅ Adicionado "CLIENT"
+  async register(email: string, password: string, role: string): Promise<User> {
+    const validRoles = ["artist", "business", "user", "admin", "client"]; // ✅ Adicionado "CLIENT"
 
     if (!validRoles.includes(role)) {
       throw new Error("Role not found");
@@ -56,20 +56,20 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    let profileType: UserProfileType;
+let profileType: number;
 
-    switch (role) {
-    case "CLIENT":
-    profileType = UserProfileType.CLIENT;
+switch (role) {
+  case "client":
+    profileType = 1;
     break;
-    case "ARTIST":
-    profileType = UserProfileType.ARTIST;
+  case "artist":
+    profileType = 2;
     break;
-    case "BUSINESS":
-    profileType = UserProfileType.BUSINESS;
+  case "business":
+    profileType = 3;
     break;
-    default:
-    profileType = UserProfileType.USER; // Caso não seja um dos anteriores, define como USER
+  default:
+    throw new Error("Invalid role provided.");
 }
 
     let userRole = await prisma.role.findUnique({ where: { name: role } });

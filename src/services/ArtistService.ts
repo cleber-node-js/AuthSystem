@@ -7,15 +7,15 @@ export class ArtistService {
   respondToShowRequest(requestToken: any, ownerId: number, arg2: string, approvalMessage: any): unknown {
     throw new Error('Method not implemented.');
   }
-  constructor() {}
+  constructor() { }
 
-  async requestShow(artistId: number, establishmentId: number): Promise<{ artist: Artist; requestToken: string }> {
+  async requestShow(artist_id: number, establishment_id: number): Promise<{ artist: Artist; requestToken: string }> {
     // 🔍 Verificar se o artista já solicitou apresentação neste estabelecimento
     const existingRequest = await prisma.establishmentArtists.findUnique({
       where: {
-        artistId_establishmentId: {
-          artistId,
-          establishmentId,
+        artist_id_establishment_id: {
+          artist_id,
+          establishment_id,
         },
       },
     });
@@ -25,21 +25,21 @@ export class ArtistService {
     }
 
     // 🔍 Verificar se o artista e o estabelecimento existem
-    const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+    const artist = await prisma.artist.findUnique({ where: { id: artist_id } });
     if (!artist) {
-      throw new Error(`Artista com ID ${artistId} não encontrado.`);
+      throw new Error(`Artista com ID ${artist_id} não encontrado.`);
     }
 
-    const establishment = await prisma.establishment.findUnique({ where: { id: establishmentId } });
+    const establishment = await prisma.establishment.findUnique({ where: { id: establishment_id } });
     if (!establishment) {
-      throw new Error(`Estabelecimento com ID ${establishmentId} não encontrado.`);
+      throw new Error(`Estabelecimento com ID ${establishment_id} não encontrado.`);
     }
 
     // ✅ Criar a relação artista-estabelecimento
     await prisma.establishmentArtists.create({
       data: {
-        artistId,
-        establishmentId,
+        artist_id,
+        establishment_id,
         status: ArtistStatus.PENDING,
         approvalMessage: null,
       },
@@ -47,7 +47,10 @@ export class ArtistService {
 
     // 🔑 Gerar token de solicitação
     const requestToken = jwt.sign(
-      { artistId, establishmentId },
+      {
+        artist_id,
+        establishment_id,
+      },
       "your_secret_key", // Altere para sua chave secreta
       { expiresIn: "7d" }
     );
@@ -61,24 +64,24 @@ export class ArtistService {
   async createArtist(
     name: string,
     genre: string = '',
-    establishmentId: number,
+    establishment_id: number,
     bio?: string,
     status: ArtistStatus = ArtistStatus.PENDING,
     imageUrl?: string // 👈 aceita URL da imagem
   ): Promise<{ artist: Artist; requestToken: string }> {
     console.log("🔍 Iniciando criação do artista...");
 
-    const parsedEstablishmentId = Number(establishmentId);
-    if (isNaN(parsedEstablishmentId)) {
+    const parsedEstablishment_id = Number(establishment_id);
+    if (isNaN(parsedEstablishment_id)) {
       throw new Error('O ID do estabelecimento deve ser um número válido.');
     }
 
     const establishment = await prisma.establishment.findUnique({
-      where: { id: parsedEstablishmentId },
+      where: { id: parsedEstablishment_id },
     });
 
     if (!establishment) {
-      throw new Error(`Estabelecimento com ID ${parsedEstablishmentId} não encontrado.`);
+      throw new Error(`Estabelecimento com ID ${parsedEstablishment_id} não encontrado.`);
     }
 
     const artist = await prisma.artist.create({
@@ -90,7 +93,7 @@ export class ArtistService {
         status,
         establishments: {
           create: {
-            establishment: { connect: { id: parsedEstablishmentId } },
+            establishment: { connect: { id: parsedEstablishment_id } },
             status,
           },
         },
@@ -98,7 +101,7 @@ export class ArtistService {
     });
 
     const requestToken = jwt.sign(
-      { artistId: artist.id, establishmentId: parsedEstablishmentId },
+      { artist_id: artist.id, establishment_id: parsedEstablishment_id },
       "your_secret_key", // Altere para sua chave secreta
       { expiresIn: "7d" }
     );
@@ -127,15 +130,15 @@ export class ArtistService {
   /**
    * 🔹 Buscar artista por ID.
    */
-  async getArtistById(artistId: number): Promise<Artist | null> {
+  async getArtistById(artist_id: number): Promise<Artist | null> {
     try {
       const artist = await prisma.artist.findUnique({
-        where: { id: artistId },
+        where: { id: artist_id },
         include: { establishments: true },
       });
       return artist;
     } catch (error) {
-      console.error(`❌ Erro ao buscar artista ID ${artistId}:`, error);
+      console.error(`❌ Erro ao buscar artista ID ${artist_id}:`, error);
       throw new Error("Erro ao buscar artista.");
     }
   }
@@ -143,16 +146,16 @@ export class ArtistService {
   /**
    * 🔹 Atualizar informações de um artista.
    */
-  async updateArtist(artistId: number, data: Partial<Artist>): Promise<Artist> {
+  async updateArtist(artist_id: number, data: Partial<Artist>): Promise<Artist> {
     try {
       const updatedArtist = await prisma.artist.update({
-        where: { id: artistId },
+        where: { id: artist_id },
         data,
         include: { establishments: true },
       });
       return updatedArtist;
     } catch (error) {
-      console.error(`❌ Erro ao atualizar artista ID ${artistId}:`, error);
+      console.error(`❌ Erro ao atualizar artista ID ${artist_id}:`, error);
       throw new Error("Erro ao atualizar artista.");
     }
   }
@@ -160,15 +163,15 @@ export class ArtistService {
   /**
    * 🔹 Soft delete de um artista (marca como inativo).
    */
-  async deleteArtist(artistId: number): Promise<Artist> {
+  async deleteArtist(artist_id: number): Promise<Artist> {
     try {
       const deletedArtist = await prisma.artist.update({
-        where: { id: artistId },
+        where: { id: artist_id },
         data: { status: ArtistStatus.ACTIVE },
       });
       return deletedArtist;
     } catch (error) {
-      console.error(`❌ Erro ao excluir artista ID ${artistId}:`, error);
+      console.error(`❌ Erro ao excluir artista ID ${artist_id}:`, error);
       throw new Error("Erro ao excluir artista.");
     }
   }
@@ -176,12 +179,12 @@ export class ArtistService {
   /**
    * 🔹 Buscar artistas por status.
    */
-  async getArtistsByStatus(establishmentId: number, status: ArtistStatus): Promise<Artist[]> {
+  async getArtistsByStatus(establishment_id: number, status: ArtistStatus): Promise<Artist[]> {
     try {
       const artists = await prisma.artist.findMany({
         where: {
           establishments: {
-            some: { establishmentId },
+            some: { establishment_id },
           },
           status,
         },
@@ -202,15 +205,15 @@ export class ArtistService {
   /**
    * 🔹 Buscar artistas de um estabelecimento específico.
    */
-  async getArtistsByEstablishment(establishmentId: number): Promise<Artist[]> {
+  async getArtistsByEstablishment(establishment_id: number): Promise<Artist[]> {
     try {
-      console.log(`🔍 Buscando artistas do estabelecimento ID: ${establishmentId}`);
+      console.log(`🔍 Buscando artistas do estabelecimento ID: ${establishment_id}`);
 
       const artists = await prisma.artist.findMany({
         where: {
           establishments: {
             some: {
-              establishmentId,
+              establishment_id,
             },
           },
         },
@@ -220,7 +223,7 @@ export class ArtistService {
       });
 
       if (artists.length === 0) {
-        console.warn(`⚠️ Nenhum artista encontrado para o estabelecimento ID: ${establishmentId}`);
+        console.warn(`⚠️ Nenhum artista encontrado para o estabelecimento ID: ${establishment_id}`);
         throw new Error("Nenhum artista encontrado para este estabelecimento.");
       }
 

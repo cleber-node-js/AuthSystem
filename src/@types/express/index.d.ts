@@ -12,7 +12,7 @@ declare global {
   namespace Express {
     // Adicionando campos ao Request
     interface Request {
-      userId?: string;
+      user_id?: string;
       files?: { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
       params: {
         id: string;

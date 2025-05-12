@@ -1,4 +1,4 @@
-import { PrismaClient, Event, CategoryType } from '@prisma/client';
+import { PrismaClient, Event } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -13,10 +13,19 @@ export class EventService {
     endDate?: Date;
     latitude: number;
     longitude: number;
-    establishmentId: number;
+    establishment_id: number;
     categories: string[];
     artists: number[];
   }): Promise<Event> {
+
+    const categoryEntities = await prisma.category.findMany({
+      where: {
+        name: {
+          in: eventData.categories.map(category => category.toUpperCase()),
+        }
+      }
+    })
+
     return prisma.event.create({
       data: {
         name: eventData.name,
@@ -26,9 +35,13 @@ export class EventService {
         endDate: eventData.endDate,
         latitude: eventData.latitude,
         longitude: eventData.longitude,
-        establishmentId: eventData.establishmentId,
+        establishment_id: eventData.establishment_id,
         categories: {
-          create: eventData.categories.map(category => ({ category: category.toUpperCase() as CategoryType }))
+          create: categoryEntities.map(category => ({
+            category: {
+              connect: { id: category.id }
+            }
+          }))
         },
         artists: {
           connect: eventData.artists.map(artistId => ({ id: artistId }))
@@ -65,29 +78,29 @@ export class EventService {
 
     const grouped: Record<number, any[]> = {};
 
-    // Agrupa os eventos por establishmentId
+    // Agrupa os eventos por establishment_id
     for (const event of events) {
-      const establishmentId = event.establishmentId;
+      const establishment_id = event.establishment_id;
 
-      if (!grouped[establishmentId]) {
-        grouped[establishmentId] = [];
+      if (!grouped[establishment_id]) {
+        grouped[establishment_id] = [];
       }
 
-      grouped[establishmentId].push(event);
+      grouped[establishment_id].push(event);
     }
 
     // Transforma o objeto em array organizado
-    return Object.entries(grouped).map(([establishmentId, events]) => ({
-      establishmentId: Number(establishmentId),
+    return Object.entries(grouped).map(([establishment_id, events]) => ({
+      establishment: Number(establishment_id),
       events,
     }));
   }
 
-  async getAllEventsByUserId(userId: number) {
+  async getAllEventsByUserId(user_id: number) {
     return await prisma.event.findMany({
       where: {
         establishment: {
-          primaryOwnerId: userId,
+          primaryOwner_id: user_id,
         },
       },
       include: {
@@ -103,22 +116,22 @@ export class EventService {
 
 
   // Obter evento pelo ID
- async getEventById(eventId: number) {
-  return prisma.event.findUnique({
-    where: { id: eventId },
-    include: {
-      establishment: {
-        select: {
-          primaryOwnerId: true
+  async getEventById(event_id: number) {
+    return prisma.event.findUnique({
+      where: { id: event_id },
+      include: {
+        establishment: {
+          select: {
+            primaryOwner_id: true
+          }
         }
       }
-    }
-  });
-}
+    });
+  }
 
 
   // Atualizar um evento existente
-  async updateEvent(eventId: number, data: Partial<{
+  async updateEvent(event_id: number, data: Partial<{
     name: string;
     description?: string;
     startDate?: Date;
@@ -128,7 +141,7 @@ export class EventService {
     longitude?: number; // Inclui longitude para atualização
   }>): Promise<Event> {
     return prisma.event.update({
-      where: { id: eventId },
+      where: { id: event_id },
       data: {
         name: data.name,
         description: data.description,
@@ -141,20 +154,20 @@ export class EventService {
     });
   }
 
-  async deleteEvent(eventId: number): Promise<void> {
+  async deleteEvent(event_id: number): Promise<void> {
     // Deleta todas as categorias relacionadas ao evento
     await prisma.eventCategory.deleteMany({
-      where: { eventId },
+      where: { event_id },
     });
 
     // Deleta todos os artistas relacionados ao evento (se existir essa relação)
     await prisma.artist.deleteMany({
-      where: { id: eventId },
+      where: { id: event_id },
     });
 
     // Agora sim, deleta o evento
     await prisma.event.delete({
-      where: { id: eventId },
+      where: { id: event_id },
     });
   }
 }

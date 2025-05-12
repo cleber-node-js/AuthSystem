@@ -8,8 +8,8 @@ export class UserPreferenceController {
 
     async getPreferencesByUserId(req: Request, res: Response) {
         try {
-            const userId = req.params.userId;
-            const userPreference = await this.userPreferenceService.getPreferencesByUserId(Number(userId));
+            const user_id = req.params.user_id;
+            const userPreference = await this.userPreferenceService.getPreferencesByuser_id(Number(user_id));
             res.json(userPreference);
         } catch (error) {
             res.status(404).json({ message: 'User Preference not found' });
@@ -18,9 +18,9 @@ export class UserPreferenceController {
 
     async createPreferences(req: Request, res: Response) {
         try {
-            const userId = Number(req.params.userId); // Obtém userId da rota
+            const user_id = Number(req.params.user_id);
             const { interests, favoriteCategories } = req.body;
-            const userPreference = await this.userPreferenceService.createPreferences(userId, interests, favoriteCategories);
+            const userPreference = await this.userPreferenceService.createPreferences(user_id, interests, favoriteCategories);
             res.status(201).json(userPreference);
         } catch (error) {
             res.status(400).json({ message: (error as any).message || 'Bad Request' });
@@ -29,9 +29,9 @@ export class UserPreferenceController {
 
     async updatePreferences(req: Request, res: Response) {
         try {
-            const userId = req.params.userId;
+            const user_id = req.params.user_id;
             const data = req.body;
-            const userPreference = await this.userPreferenceService.updatePreferences(Number(userId), data);
+            const userPreference = await this.userPreferenceService.updatePreferences(Number(user_id), data);
             res.json(userPreference);
         } catch (error) {
             res.status(404).json({ message: 'User Preference not found' });
@@ -40,8 +40,8 @@ export class UserPreferenceController {
 
     async deletePreferences(req: Request, res: Response) {
         try {
-            const userId = req.params.userId;
-            await this.userPreferenceService.deletePreferences(Number(userId));
+            const user_id = req.params.user_id;
+            await this.userPreferenceService.deletePreferences(Number(user_id));
             res.status(204).json({ message: 'User Preference deleted' });
         } catch (error) {
             res.status(404).json({ message: 'User Preference not found' });

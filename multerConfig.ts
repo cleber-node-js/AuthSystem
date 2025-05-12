@@ -3,9 +3,9 @@ import path from "path";
 
 // Diretório de armazenamento das imagens
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../uploads/establishments")); // ✅ Diretório correto
-  },
+  // destination: (req, file, cb) => {
+  //   cb(null, path.join(__dirname, "../../uploads/establishments")); // ✅ Diretório correto
+  // },
   filename: function (req, file, cb) {
     cb(null, `${Date.now()}-${file.originalname}`);
   },

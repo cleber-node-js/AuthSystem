@@ -15,7 +15,7 @@ export class AuthController {
       }
 
       // Verificar se o papel é válido
-      const validRoles = ['ARTIST', 'BUSINESS', 'ADMIN', 'CLIENT'];
+      const validRoles = ['artist', 'business', 'admin', 'client'];
       if (!validRoles.includes(role)) {
         return response.status(400).json({ message: 'Role not found' });
       }

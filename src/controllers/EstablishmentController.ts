@@ -6,7 +6,6 @@ import sharp from 'sharp';
 import cloudinary from '../utils/cloudinary';
 import type { UploadApiResponse } from 'cloudinary';
 import { resolve } from 'path';
-import { CategoryType } from '@prisma/client';
 import { arrayBuffer } from 'stream/consumers';
 
 const establishmentService = new EstablishmentService();
@@ -15,10 +14,10 @@ export class EstablishmentController {
   // ✅ Criar estabelecimento com imagem e novos campos
   async create(req: CustomRequest, res: Response): Promise<Response> {
     const { name, address, contact, latitude, longitude, categories, imageUrl } = req.body;
-    const primaryOwnerId = req.userId;
+    const primaryOwner_id = req.user_id;
     const imageFile = req.file;
 
-    let parsedCategories: CategoryType[] = [];
+    let parsedCategories = [];
     if (typeof categories === 'string') {
       try {
         parsedCategories = JSON.parse(categories);
@@ -29,7 +28,7 @@ export class EstablishmentController {
     }
 
 
-    if (!primaryOwnerId) {
+    if (!primaryOwner_id) {
       return res.status(401).json({ error: "Usuário não autenticado." });
     }
 
@@ -40,7 +39,7 @@ export class EstablishmentController {
       !latitude ||
       !longitude ||
       !parsedCategories.length ||
-      !primaryOwnerId
+      !primaryOwner_id
     ) {
       return res.status(400).json({
         error: 'Nome, endereço, contato, latitude, longitude, categorias e ID do proprietário são obrigatórios.',
@@ -83,7 +82,7 @@ export class EstablishmentController {
         name,
         address,
         contact,
-        Number(primaryOwnerId),
+        Number(primaryOwner_id),
         parseFloat(latitude),
         parseFloat(longitude),
         parsedCategories,
@@ -99,14 +98,14 @@ export class EstablishmentController {
 
   // 🔍 Obter estabelecimento por ID
   async getById(req: Request, res: Response): Promise<Response> {
-    const establishmentId = parseInt(req.params.id, 10);
+    const establishment_id = parseInt(req.params.id, 10);
 
-    if (isNaN(establishmentId) || establishmentId <= 0) {
+    if (isNaN(establishment_id) || establishment_id <= 0) {
       return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
     }
 
     try {
-      const establishment = await establishmentService.getEstablishmentById(establishmentId);
+      const establishment = await establishmentService.getEstablishmentById(establishment_id);
       return res.status(200).json(establishment);
     } catch (error) {
       console.error('❌ Erro ao buscar estabelecimento:', error);
@@ -127,16 +126,16 @@ export class EstablishmentController {
 
   // 🔍 Obter artistas por estabelecimento e status
   async getArtistsByEstablishment(req: Request, res: Response): Promise<Response> {
-    const establishmentId = parseInt(req.params.id, 10);
+    const establishment_id = parseInt(req.params.id, 10);
     const { status } = req.query;
 
-    if (isNaN(establishmentId) || establishmentId <= 0) {
+    if (isNaN(establishment_id) || establishment_id <= 0) {
       return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
     }
 
     try {
       const artists = await establishmentService.getArtistsByEstablishmentAndStatus(
-        establishmentId,
+        establishment_id,
         status?.toString()
       );
       return res.status(200).json(artists);
@@ -148,22 +147,22 @@ export class EstablishmentController {
 
   // ✏️ Atualizar estabelecimento
   async update(req: CustomRequest, res: Response): Promise<Response> {
-    const establishmentId = parseInt(req.params.id, 10);
-    const userId = req.userId;
+    const establishment_id = parseInt(req.params.id, 10);
+    const user_id = req.user_id;
 
-    if (!userId) {
+    if (!user_id) {
       return res.status(401).json({ error: 'Usuário não autenticado.' });
     }
 
-    if (isNaN(establishmentId) || establishmentId <= 0) {
+    if (isNaN(establishment_id) || establishment_id <= 0) {
       return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
     }
 
     try {
-      const establishment = await establishmentService.getEstablishmentById(establishmentId);
+      const establishment = await establishmentService.getEstablishmentById(establishment_id);
       console.log("🛡️ Estabelecimento encontrado:", establishment);
 
-      if (establishment.primaryOwnerId !== Number(userId)) {
+      if (establishment.primaryOwner_id !== Number(user_id)) {
         return res.status(403).json({ error: 'Você não tem permissão para atualizar este estabelecimento.' });
       }
 
@@ -197,12 +196,12 @@ export class EstablishmentController {
         })
 
         if (establishment.imageUrl) {
-          const publicIdMatch = establishment.imageUrl.match(/\/upload\/v\d+\/establishments\/(.+)\.webp/);
-          const publicId = publicIdMatch ? publicIdMatch[1] : null;
+          const public_idMatch = establishment.imageUrl.match(/\/upload\/v\d+\/establishments\/(.+)\.webp/);
+          const public_id = public_idMatch ? public_idMatch[1] : null;
 
-          if (publicId) {
-            await cloudinary.uploader.destroy(`establishments/${publicId}`);
-            console.log('🧹 Imagem antiga deletada:', publicId);
+          if (public_id) {
+            await cloudinary.uploader.destroy(`establishments/${public_id}`);
+            console.log('🧹 Imagem antiga deletada:', public_id);
           } else {
             console.warn('⚠️ ID público não encontrado na URL da imagem:', establishment.imageUrl);
           }
@@ -212,7 +211,7 @@ export class EstablishmentController {
 
       }
 
-      const updatedEstableshment = await establishmentService.updateEstablishment(establishmentId, updatedData);
+      const updatedEstableshment = await establishmentService.updateEstablishment(establishment_id, updatedData);
       return res.status(200).json(updatedEstableshment);
     } catch (error) {
       console.error('❌ Erro ao atualizar estabelecimento:', error);
@@ -222,38 +221,38 @@ export class EstablishmentController {
 
   // 🗑️ Excluir estabelecimento
   async delete(req: CustomRequest, res: Response): Promise<Response> {
-    const establishmentId = parseInt(req.params.id, 10);
-    const userId = req.userId;
+    const establishment_id = parseInt(req.params.id, 10);
+    const user_id = req.user_id;
 
-    if (!userId) {
+    if (!user_id) {
       return res.status(401).json({ error: 'Usuário não autenticado.' });
     }
 
-    if (isNaN(establishmentId) || establishmentId <= 0) {
+    if (isNaN(establishment_id) || establishment_id <= 0) {
       return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
     }
 
     try {
-      const establishment = await establishmentService.getEstablishmentById(establishmentId);
+      const establishment = await establishmentService.getEstablishmentById(establishment_id);
       console.log("🛡️ Estabelecimento encontrado:", establishment);
 
-      if (establishment.primaryOwnerId !== Number(userId)) {
+      if (establishment.primaryOwner_id !== Number(user_id)) {
         return res.status(403).json({ error: 'Você não tem permissão para excluir este estabelecimento.' });
       }
 
       if(establishment.imageUrl) {
         const match = establishment.imageUrl.match(/\/upload\/v\d+\/establishments\/(.+)\.webp/);
-        const publicId = match ? match[1] : null;
+        const public_id = match ? match[1] : null;
 
-        if(publicId) {
-          await cloudinary.uploader.destroy(`establishments/${publicId}`);
-          console.log('🧹 Imagem excluída do Cloudinary:', publicId);
+        if(public_id) {
+          await cloudinary.uploader.destroy(`establishments/${public_id}`);
+          console.log('🧹 Imagem excluída do Cloudinary:', public_id);
         } else {
           console.warn('⚠️ ID público não encontrado na URL da imagem:', establishment.imageUrl);
         }
       }
 
-      const result = await establishmentService.deleteEstablishment(establishmentId);
+      const result = await establishmentService.deleteEstablishment(establishment_id);
       return res.status(200).json(result);
     } catch (error) {
       console.error('❌ Erro ao excluir estabelecimento:', error);
@@ -266,16 +265,16 @@ export class EstablishmentController {
     console.log("🔍 Params recebidos:", req.params);
     console.log("🔍 Body recebido:", req.body);
 
-    const establishmentId = parseInt(req.params.establishmentId, 10) || parseInt(req.body.establishmentId, 10);
+    const establishment_id = parseInt(req.params.establishment_id, 10) || parseInt(req.body.establishment_id, 10);
     const artistId = parseInt(req.params.artistId, 10) || parseInt(req.body.artistId, 10);
     const { status } = req.body;
-    const userId = req.userId;
+    const user_id = req.user_id;
 
-    if (!userId) {
+    if (!user_id) {
       return res.status(401).json({ error: "Usuário não autenticado." });
     }
 
-    if (isNaN(establishmentId) || isNaN(artistId)) {
+    if (isNaN(establishment_id) || isNaN(artistId)) {
       return res.status(400).json({ error: "ID do estabelecimento ou do artista inválido." });
     }
 
@@ -284,17 +283,17 @@ export class EstablishmentController {
     }
 
     try {
-      const establishment = await establishmentService.getEstablishmentById(establishmentId);
+      const establishment = await establishmentService.getEstablishmentById(establishment_id);
       if (!establishment) {
         return res.status(404).json({ error: "Estabelecimento não encontrado." });
       }
 
-      if (establishment.primaryOwnerId !== Number(userId)) {
+      if (establishment.primaryOwner_id !== Number(user_id)) {
         return res.status(403).json({ error: "Você não tem permissão para alterar artistas neste estabelecimento." });
       }
 
       const result = await establishmentService.updateArtistStatus(
-        establishmentId,
+        establishment_id,
         artistId,
         status.toUpperCase()
       );

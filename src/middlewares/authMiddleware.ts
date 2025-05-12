@@ -65,7 +65,7 @@ export const authenticateOwner = async (req: CustomRequest, res: Response, next:
       return res.status(404).json({ message: 'Estabelecimento não encontrado.' });
     }
 
-    if (establishment.primaryOwnerId !== Number(req.userId)) {
+    if (establishment.primaryOwner_id !== Number(req.userId)) {
       return res.status(403).json({ message: 'Você não tem permissão para modificar este estabelecimento.' });
     }
 

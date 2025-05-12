@@ -47,17 +47,17 @@ export class ArtistController {
    */
   async requestShow(req: Request, res: Response): Promise<Response> {
     try {
-      const { artistId, establishmentId } = req.body;
+      const { artist_id, establishmentId } = req.body;
   
-      const parsedArtistId = parseInt(artistId, 10);
+      const parsedArtist_id = parseInt(artist_id, 10);
       const parsedEstablishmentId = parseInt(establishmentId, 10);
   
-      if (isNaN(parsedArtistId) || isNaN(parsedEstablishmentId)) {
+      if (isNaN(parsedArtist_id) || isNaN(parsedEstablishmentId)) {
         return res.status(400).json({ error: "ID do artista e do estabelecimento devem ser números válidos." });
       }
   
       // ✅ Agora chamando `requestShow` corretamente!
-      const { artist, requestToken } = await artistService.requestShow(parsedArtistId, parsedEstablishmentId);
+      const { artist, requestToken } = await artistService.requestShow(parsedArtist_id, parsedEstablishmentId);
       return res.status(201).json({ artist, requestToken });
     } catch (error) {
       console.error(`❌ Erro na solicitação de show:`, error);
@@ -73,25 +73,25 @@ export class ArtistController {
   async respondToShowRequest(req: CustomRequest, res: Response): Promise<Response> {
     try {
       const { requestToken, status, approvalMessage } = req.body;
-      const ownerId = Number(req.userId);
+      const owner_id = Number(req.user_id);
 
       if (!requestToken || !["APPROVED", "REJECTED"].includes(status)) {
         return res.status(400).json({ error: 'Token e status (APPROVED/REJECTED) são obrigatórios.' });
       }
 
-      if (isNaN(ownerId)) {
+      if (isNaN(owner_id)) {
         return res.status(403).json({ error: 'Usuário não autenticado.' });
       }
 
       // Decodifica o token com os dados do artista e estabelecimento
-      const decoded = jwt.decode(requestToken) as { artistId: number; establishmentId: number };
-      if (!decoded || isNaN(decoded.artistId) || isNaN(decoded.establishmentId)) {
+      const decoded = jwt.decode(requestToken) as { artist_id: number; establishmentId: number };
+      if (!decoded || isNaN(decoded.artist_id) || isNaN(decoded.establishmentId)) {
         return res.status(400).json({ error: 'Token inválido ou malformado.' });
       }
 
       const updatedArtist = await artistService.respondToShowRequest(
         requestToken,
-        ownerId,
+        owner_id,
         status as ArtistStatus,
         approvalMessage
       ) as unknown as { name: string } | null;
@@ -115,10 +115,10 @@ export class ArtistController {
 
   async getArtist(req: Request, res: Response): Promise<Response> {
     try {
-      const artistId = Number(req.params.id);
-      if (isNaN(artistId)) return res.status(400).json({ error: 'ID do artista inválido.' });
+      const artist_id = Number(req.params.id);
+      if (isNaN(artist_id)) return res.status(400).json({ error: 'ID do artista inválido.' });
 
-      const artist = await artistService.getArtistById(artistId);
+      const artist = await artistService.getArtistById(artist_id);
       if (artist === null) return res.status(404).json({ error: 'Artista não encontrado.' });
 
       return res.status(200).json(artist);
@@ -140,11 +140,11 @@ export class ArtistController {
 
   async update(req: Request, res: Response): Promise<Response> {
     try {
-      const artistId = Number(req.params.id);
+      const artist_id = Number(req.params.id);
       const data = req.body;
-      if (isNaN(artistId)) return res.status(400).json({ error: 'ID do artista inválido.' });
+      if (isNaN(artist_id)) return res.status(400).json({ error: 'ID do artista inválido.' });
 
-      const updatedArtist = await artistService.updateArtist(artistId, data);
+      const updatedArtist = await artistService.updateArtist(artist_id, data);
       return res.status(200).json(updatedArtist);
     } catch (error) {
       console.error('❌ Erro ao atualizar artista:', error);
@@ -154,10 +154,10 @@ export class ArtistController {
 
   async delete(req: Request, res: Response): Promise<Response> {
     try {
-      const artistId = Number(req.params.id);
-      if (isNaN(artistId)) return res.status(400).json({ error: 'ID do artista inválido.' });
+      const artist_id = Number(req.params.id);
+      if (isNaN(artist_id)) return res.status(400).json({ error: 'ID do artista inválido.' });
 
-      const deletedArtist = await artistService.deleteArtist(artistId);
+      const deletedArtist = await artistService.deleteArtist(artist_id);
       return res.status(200).json({ message: 'Artista excluído com sucesso.', artist: deletedArtist });
     } catch (error) {
       console.error('❌ Erro ao excluir artista:', error);
@@ -167,14 +167,14 @@ export class ArtistController {
 
   async getArtistsByStatus(req: CustomRequest, res: Response): Promise<Response> {
     try {
-      const establishmentId = Number(req.params.establishmentId);
+      const establishment_id = Number(req.params.establishment_id);
       const status = req.params.status as ArtistStatus;
 
-      if (isNaN(establishmentId)) {
+      if (isNaN(establishment_id)) {
         return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
       }
 
-      const artists = await artistService.getArtistsByStatus(establishmentId, status);
+      const artists = await artistService.getArtistsByStatus(establishment_id, status);
       return res.status(200).json(artists);
     } catch (error) {
       console.error('❌ Erro ao buscar artistas por status:', error);
@@ -184,12 +184,12 @@ export class ArtistController {
 
   async getArtistsByEstablishment(req: CustomRequest, res: Response): Promise<Response> {
     try {
-      const establishmentId = Number(req.params.establishmentId);
-      if (isNaN(establishmentId)) {
+      const establishment_id = Number(req.params.establishment_id);
+      if (isNaN(establishment_id)) {
         return res.status(400).json({ error: 'ID do estabelecimento inválido.' });
       }
 
-      const artists = await artistService.getArtistsByEstablishment(establishmentId);
+      const artists = await artistService.getArtistsByEstablishment(establishment_id);
       return res.status(200).json(artists);
     } catch (error) {
       console.error('❌ Erro ao buscar artistas do estabelecimento:', error);
@@ -200,11 +200,11 @@ export class ArtistController {
   async approveShow(req: CustomRequest, res: Response): Promise<Response> {
     try {
       const { requestToken, approvalMessage } = req.body;
-      const ownerId = Number(req.userId);
+      const owner_id = Number(req.user_id);
 
       const updatedArtist = await artistService.respondToShowRequest(
         requestToken,
-        ownerId,
+        owner_id,
         ArtistStatus.APPROVED,
         approvalMessage
       );

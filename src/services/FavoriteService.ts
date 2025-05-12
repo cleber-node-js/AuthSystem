@@ -3,22 +3,22 @@ import { PrismaClient, Favorite } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export class FavoriteService {
-    async addFavorite(userId: number, eventId: number): Promise<Favorite> {
+    async addFavorite(user_id: number, event_id: number): Promise<Favorite> {
         return await prisma.favorite.create({
             data: {
-                userId,
-                eventId
+                user_id,
+                event_id
             }
         });
     }
 
-    async getFavoritesByUser(userId: number): Promise<Favorite[]> {
+    async getFavoritesByUser(user_id: number): Promise<Favorite[]> {
         return await prisma.favorite.findMany({
             where: {
-                userId
+                user_id
             },
             include: {
-                Event: true,  // Incluindo informações do evento, se necessário
+                event: true,  // Incluindo informações do evento, se necessário
             }
         });
     }
@@ -29,11 +29,11 @@ export class FavoriteService {
         });
     }
 
-    async checkFavorite(userId: number, eventId: number): Promise<Favorite | null> {
+    async checkFavorite(user_id: number, event_id: number): Promise<Favorite | null> {
         return await prisma.favorite.findFirst({
             where: {
-                userId: userId,
-                eventId: eventId
+                user_id: user_id,
+                event_id: event_id
             }
         });
     }        
@@ -42,7 +42,7 @@ export class FavoriteService {
     async getAllFavorites(): Promise<Favorite[]> {
         return await prisma.favorite.findMany({
             include: {
-                Event: true,  // Opcional: incluir detalhes dos eventos favoritos
+                event: true,  // Opcional: incluir detalhes dos eventos favoritos
             }
         });
     }

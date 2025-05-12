@@ -3,13 +3,13 @@ import { PrismaClient, UserRole } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export class UserRoleService {
-    async createUserRole(userId: number, roleId: number): Promise<UserRole | null> {
+    async createUserRole(user_id: number, role_id: number): Promise<UserRole | null> {
         try {
             const existingUserRole = await prisma.userRole.findUnique({
                 where: {
-                    userId_roleId: {
-                        userId,
-                        roleId,
+                    user_id_role_id: {
+                        user_id,
+                        role_id,
                     },
                 },
             });
@@ -21,8 +21,8 @@ export class UserRoleService {
 
             return await prisma.userRole.create({
                 data: {
-                    userId,
-                    roleId,
+                    user_id,
+                    role_id,
                 },
             });
         } catch (error) {
@@ -41,13 +41,13 @@ export class UserRoleService {
         }
     }
 
-    async getUserRoleById(userId: number, roleId: number): Promise<UserRole | null> {
+    async getUserRoleById(user_id: number, role_id: number): Promise<UserRole | null> {
         try {
             const userRole = await prisma.userRole.findUnique({
                 where: {
-                    userId_roleId: {
-                        userId,
-                        roleId,
+                    user_id_role_id: {
+                        user_id,
+                        role_id,
                     },
                 },
             });
@@ -58,18 +58,18 @@ export class UserRoleService {
         }
     }
 
-    async updateUserRole(userId: number, roleId: number, newUserId: number, newRoleId: number): Promise<UserRole> {
+    async updateUserRole(user_id: number, role_id: number, newUser_id: number, newRole_id: number): Promise<UserRole> {
         try {
             const updatedUserRole = await prisma.userRole.update({
                 where: {
-                    userId_roleId: {
-                        userId,
-                        roleId,
+                    user_id_role_id: {
+                        user_id,
+                        role_id,
                     },
                 },
                 data: {
-                    userId: newUserId,
-                    roleId: newRoleId,
+                    user_id: newUser_id,
+                    role_id: newRole_id,
                 },
             });
             return updatedUserRole;
@@ -79,13 +79,13 @@ export class UserRoleService {
         }
     }
 
-    async deleteUserRole(userId: number, roleId: number): Promise<UserRole> {
+    async deleteUserRole(user_id: number, role_id: number): Promise<UserRole> {
         try {
             const deletedUserRole = await prisma.userRole.delete({
                 where: {
-                    userId_roleId: {
-                        userId,
-                        roleId,
+                    user_id_role_id: {
+                        user_id,
+                        role_id,
                     },
                 },
             });

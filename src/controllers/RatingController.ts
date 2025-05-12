@@ -5,11 +5,11 @@ const ratingService = new RatingService();
 
 export class RatingController {
   async createRating(req: Request, res: Response): Promise<Response> {
-    const { eventId, userId, score, comment } = req.body;
-    console.log(`📌 Recebendo requisição para criar avaliação:`, { eventId, userId, score, comment });
+    const { event_id, user_id, score, comment } = req.body;
+    console.log(`📌 Recebendo requisição para criar avaliação:`, { event_id, user_id, score, comment });
 
     try {
-      const newRating = await ratingService.createRating(eventId, userId, score, comment);
+      const newRating = await ratingService.createRating(event_id, user_id, score, comment);
       console.log(`✅ Avaliação criada com sucesso! ID: ${newRating.id}`);
       return res.status(201).json(newRating);
     } catch (error: any) {
@@ -51,11 +51,11 @@ export class RatingController {
 
   async updateRating(req: Request, res: Response): Promise<Response> {
     const id = Number(req.params.id);
-    const { eventId, userId, score, comment } = req.body;
-    console.log(`📌 Atualizando avaliação com ID ${id}`, { eventId, userId, score, comment });
+    const { event_id, user_id, score, comment } = req.body;
+    console.log(`📌 Atualizando avaliação com ID ${id}`, { event_id, user_id, score, comment });
 
     try {
-      const updatedRating = await ratingService.updateRating(id, eventId, userId, score, comment);
+      const updatedRating = await ratingService.updateRating(id, event_id, user_id, score, comment);
       console.log(`✅ Avaliação ID ${id} atualizada com sucesso.`);
       return res.status(200).json(updatedRating);
     } catch (error: any) {

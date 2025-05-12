@@ -9,18 +9,18 @@ export class NotificationController {
   async createNotification(req: Request, res: Response) {
     try {
       const {
-        userId,
-        artistId,
-        establishmentId,
+        user_id,
+        artist_id,
+        establishment_id,
         category,
         title,
         content,
       } = req.body;
 
       const notification = await notificationService.createNotification(
-        userId,
-        artistId,
-        establishmentId,
+        user_id,
+        artist_id,
+        establishment_id,
         category as NotificationCategory, // Cast to NotificationCategory enum
         title,
         content,
@@ -35,8 +35,8 @@ export class NotificationController {
   // READ - Get notifications by user ID
   async getNotificationsByUserId(req: Request, res: Response) {
     try {
-      const userId = parseInt(req.params.userId, 10);
-      const notifications = await notificationService.getNotificationsByUserId(userId);
+      const user_id = parseInt(req.params.user_id, 10);
+      const notifications = await notificationService.getNotificationsByUserId(user_id);
       res.json(notifications);
     } catch (error: any) {
       res.status(404).json({ message: error.message || 'Notifications not found for user' });
@@ -46,8 +46,8 @@ export class NotificationController {
   // READ - Get notifications by artist ID
   async getNotificationsByArtistId(req: Request, res: Response) {
     try {
-      const artistId = parseInt(req.params.artistId, 10);
-      const notifications = await notificationService.getNotificationsByArtistId(artistId);
+      const artist_id = parseInt(req.params.artist_id, 10);
+      const notifications = await notificationService.getNotificationsByArtistId(artist_id);
       res.json(notifications);
     } catch (error: any) {
       res.status(404).json({ message: error.message || 'Notifications not found for artist' });
@@ -57,8 +57,8 @@ export class NotificationController {
   // READ - Get notifications by establishment ID
   async getNotificationsByEstablishmentId(req: Request, res: Response) {
     try {
-      const establishmentId = parseInt(req.params.establishmentId, 10);
-      const notifications = await notificationService.getNotificationsByEstablishmentId(establishmentId);
+      const establishment_id = parseInt(req.params.establishment_id, 10);
+      const notifications = await notificationService.getNotificationsByEstablishmentId(establishment_id);
       res.json(notifications);
     } catch (error: any) {
       res.status(404).json({ message: error.message || 'Notifications not found for establishment' });

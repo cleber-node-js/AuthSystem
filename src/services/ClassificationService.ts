@@ -4,11 +4,11 @@ const prisma = new PrismaClient();
 
 export class ClassificationService {
     // Adiciona uma nova classificação
-    async createClassification(userId: number, eventId: number, score: number, comment?: string): Promise<Classification> {
+    async createClassification(user_id: number, event_id: number, score: number, comment?: string): Promise<Classification> {
         return await prisma.classification.create({
             data: {
-                userId,
-                eventId,
+                user_id,
+                event_id,
                 score,
                 comment
             }
@@ -37,12 +37,12 @@ export class ClassificationService {
     }
 
     // Atualiza uma classificação
-    async updateClassification(id: number, userId: number, eventId: number, score: number, comment?: string): Promise<Classification> {
+    async updateClassification(id: number, user_id: number, event_id: number, score: number, comment?: string): Promise<Classification> {
         return await prisma.classification.update({
             where: { id },
             data: {
-                userId,
-                eventId,
+                user_id,
+                event_id,
                 score,
                 comment
             }
