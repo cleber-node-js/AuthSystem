@@ -8,7 +8,7 @@ router.get('/categories', async (req, res, next) => {
     try {
         await categoryController.getAll(req, res);
     } catch (error) {
-        next(error); // Garante que o erro seja passado para o middleware
+        // next(error); // Garante que o erro seja passado para o middleware
     }
 });
 

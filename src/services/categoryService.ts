@@ -3,6 +3,16 @@ import { PrismaClient, CategoryType } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export class CategoryService {
+    readonly categories = [
+        { type: 'Agenda', name: 'Agenda', imageUrl: '' },
+        { type: 'MUSIC', name: 'Musical', imageUrl: '' },
+        { type: 'GASTRONIMIC', name: 'Gastronomia', imageUrl: '' },
+        { type: 'CINEMA', name: 'Cinema', imageUrl: '' },
+        { type: 'ART', name: 'Artistas', imageUrl: '' },
+        { type: 'ESPORT', name: 'Esportes', imageUrl: '' },
+        { type: 'OTHER', name: 'Outros', imageUrl: '' }
+    ];
+
     async getAllCategories() {
         return prisma.category.findMany();
     }
