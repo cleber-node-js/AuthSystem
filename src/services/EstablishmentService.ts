@@ -78,6 +78,21 @@ export class EstablishmentService {
     return establishment;
   }
 
+  async getEstablishmentByOwnerId(primaryOwner_id: number): Promise<Establishment | null> {
+    if (!Number.isInteger(primaryOwner_id) || primaryOwner_id <= 0) {
+      throw new Error(`ID do proprietario inválido: ${primaryOwner_id}`);
+    }
+
+    return prisma.establishment.findFirst({
+      where: {
+        primaryOwner_id: primaryOwner_id
+      },
+      include: {
+        categories: true
+      }
+    })
+  }
+
   // 🔍 Buscar todos os estabelecimentos
   async getAllEstablishments(): Promise<Establishment[]> {
     return prisma.establishment.findMany({

@@ -4,11 +4,11 @@ const prisma = new PrismaClient();
 
 export class RatingService {
   // Cria uma nova classificação
-  async createRating(eventId: number, userId: number, score: number, comment?: string): Promise<Rating> {
+  async createRating(event_id: number, user_id: number, score: number, comment?: string): Promise<Rating> {
     return await prisma.rating.create({
       data: {
-        eventId,
-        userId,
+        event_id,
+        user_id,
         score,
         comment,
       },
@@ -37,12 +37,12 @@ export class RatingService {
   }
 
   // Atualiza uma classificação
-  async updateRating(id: number, eventId: number, userId: number, score: number, comment?: string): Promise<Rating> {
+  async updateRating(id: number, event_id: number, user_id: number, score: number, comment?: string): Promise<Rating> {
     return await prisma.rating.update({
       where: { id },
       data: {
-        eventId,
-        userId,
+        event_id,
+        user_id,
         score,
         comment,
       },

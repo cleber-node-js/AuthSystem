@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export class SessionService {
     // Criar uma nova sessão
-    public async createSession(userId: number): Promise<Session> {
+    public async createSession(user_id: number): Promise<Session> {
         const sessionToken = crypto.randomBytes(32).toString('hex'); // Gera um token seguro e aleatório
 
         // Verificar se o sessionToken já existe
@@ -20,7 +20,7 @@ export class SessionService {
         // Criar uma nova sessão
         return await prisma.session.create({
             data: {
-                userId,
+                user_id,
                 sessionToken,
                 createdAt: new Date(),
                 updatedAt: new Date(),

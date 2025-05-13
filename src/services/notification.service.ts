@@ -5,18 +5,18 @@ const prisma = new PrismaClient();
 export class NotificationService {
   // CREATE - Create a new notification
   async createNotification(
-    userId: number | null,
-    artistId: number | null,
-    establishmentId: number | null,
+    user_id: number | null,
+    artist_id: number | null,
+    establishment_id: number | null,
     category: NotificationCategory,
     title: string,
     content: string,
   ): Promise<Notification> {
     return prisma.notification.create({
       data: {
-        userId,
-        artistId,
-        establishmentId,
+        user_id,
+        artist_id,
+        establishment_id,
         category,
         title,
         content,
@@ -25,25 +25,25 @@ export class NotificationService {
   }
 
   // READ - Get notifications by user ID
-  async getNotificationsByUserId(userId: number): Promise<Notification[]> {
+  async getNotificationsByUserId(user_id: number): Promise<Notification[]> {
     return prisma.notification.findMany({
-      where: { userId },
+      where: { user_id },
       orderBy: { createdAt: 'desc' }, // Order by most recent
     });
   }
 
   // READ - Get notifications by artist ID
-  async getNotificationsByArtistId(artistId: number): Promise<Notification[]> {
+  async getNotificationsByArtistId(artist_id: number): Promise<Notification[]> {
     return prisma.notification.findMany({
-      where: { artistId },
+      where: { artist_id },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   // READ - Get notifications by establishment ID
-  async getNotificationsByEstablishmentId(establishmentId: number): Promise<Notification[]> {
+  async getNotificationsByEstablishmentId(establishment_id: number): Promise<Notification[]> {
     return prisma.notification.findMany({
-      where: { establishmentId },
+      where: { establishment_id },
       orderBy: { createdAt: 'desc' },
     });
   }

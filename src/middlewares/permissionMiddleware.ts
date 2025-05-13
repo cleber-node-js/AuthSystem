@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 export interface CustomRequest extends Request {
-  userId?: string;
+  user_id?: string;
   userRole?: string;
 }
 
@@ -25,12 +25,12 @@ export const checkPermission = (requiredRoles: string[]) => {
 
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string };
-      const userId = decoded.id;
+      const user_id = decoded.id;
       const userRole = decoded.role;
 
       // Buscar usuário no banco para verificar se ele existe e obter seus papéis
       const user = await prisma.user.findUnique({
-        where: { id: Number(userId) },
+        where: { id: Number(user_id) },
         include: { roles: { include: { role: true } } },
       });
 
@@ -48,7 +48,7 @@ export const checkPermission = (requiredRoles: string[]) => {
         return res.status(403).json({ message: 'Acesso negado! Permissão insuficiente.' });
       }
 
-      req.userId = userId;
+      req.user_id = user_id;
       req.userRole = userRole;
       return next();
     } catch (error) {

@@ -18,13 +18,34 @@ async function main() {
 
   await prisma.category.createMany({
     data: [
-      { name: 'Agenda', imageUrl: '' },
-      { name: 'Musical', imageUrl: '' },
-      { name: 'Gastronomia', imageUrl: '' },
-      { name: 'Cinema', imageUrl: '' },
-      { name: 'Artistas', imageUrl: '' },
-      { name: 'Esportes', imageUrl: '' },
-      { name: 'Outros', imageUrl: '' }
+      {
+        name: 'Agenda',
+        imageUrl: 'https://res.cloudinary.com/dcqhbkvpb/image/upload/v1747139320/agender_jxfyei.png'
+      },
+      {
+        name: 'Musica',
+        imageUrl: 'https://res.cloudinary.com/dcqhbkvpb/image/upload/v1747139320/music_lnyv7m.png'
+      },
+      {
+        name: 'Gastronomia',
+        imageUrl: 'https://res.cloudinary.com/dcqhbkvpb/image/upload/v1747139320/gastromer_ujtktb.png'
+      },
+      {
+        name: 'Cinema',
+        imageUrl: 'https://res.cloudinary.com/dcqhbkvpb/image/upload/v1747139319/cinema_qv9xja.png'
+      },
+      {
+        name: 'Artistas',
+        imageUrl: 'https://res.cloudinary.com/dcqhbkvpb/image/upload/v1747139320/artistes_s14uqq.png'
+      },
+      {
+        name: 'Esportes',
+        imageUrl: 'https://res.cloudinary.com/dcqhbkvpb/image/upload/v1747144732/sports_yjq701.png'
+      },
+      {
+        name: 'Outros',
+        imageUrl: 'https://res.cloudinary.com/dcqhbkvpb/image/upload/v1747139320/other_tdlcye.png'
+      }
     ],
     skipDuplicates: true
   })

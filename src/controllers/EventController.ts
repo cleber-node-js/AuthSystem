@@ -15,7 +15,7 @@ interface Event {
     latitude: number;
     longitude: number;
     establishment_id: number;
-    categories: string[];
+    categories: string;
     artists: number[];
 }
 
@@ -29,17 +29,36 @@ const eventService = new EventService();
 export class EventController {
     // Criar um novo evento
     async create(req: Request, res: Response): Promise<Response> {
-        const { name, description, startDate, endDate, establishment_id, categories, artists } = req.body;
+        const { name, description, startDate, endDate, latitude, longitude, establishment_id, categories, artists } = req.body;
 
-        let parsedCategories: string[] = [];
-        if (typeof categories === 'string') {
-            try {
-                parsedCategories = JSON.parse(categories);
-            } catch (error) {
-                console.error('Erro ao fazer parse das categorias:', error);
-                parsedCategories = [];
-            }
+
+        let parsedCategories = Array.isArray(categories)
+            ? categories
+            : typeof categories === 'string'
+                ? (() => {
+                    try {
+                        return JSON.parse(categories);
+                    } catch (error) {
+                        console.error('Erro ao fazer parse da categorias evento', error);
+                        return [];
+                    }
+                })() : [];
+
+        if (
+            !name ||
+            !description ||
+            !startDate ||
+            !endDate ||
+            !latitude ||
+            !longitude ||
+            !establishment_id ||
+            !parsedCategories.length
+        ) {
+            return res.status(400).json({
+                error: 'Nome, endereço, contato, latitude, longitude, categorias são obrigatórios.',
+            });
         }
+
 
         const imageFile = req.file;
 
@@ -56,12 +75,12 @@ export class EventController {
             return res.status(400).json({ error: 'Imagem obrigatória.' });
         }
 
+
         try {
             // Processamento da imagem
-            const arrayBuffer = await fs.promises.readFile(imageFile.path);
-            const buffer = new Uint8Array(arrayBuffer);
+            const buffer = await fs.promises.readFile(imageFile.path);
             const compressedBuffer = await sharp(buffer)
-                .resize({ width: 800 })
+                .resize(800, 800, { fit: 'inside' })
                 .webp({ quality: 80 })
                 .toBuffer();
 
@@ -73,14 +92,12 @@ export class EventController {
                 }, function (error, result) {
                     if (error) {
                         console.error('Erro ao fazer upload para o Cloudinary:', error);
-                        reject(error);
-                    } else {
-                        if (result) {
-                            resolve(result);
-                        } else {
-                            reject(new Error('Upload result is undefined.'));
-                        }
+                        return reject(error);
                     }
+                    if (!result) {
+                        return reject(new Error('Erro ao fazer upload da image'))
+                    }
+                    resolve(result)
                 }).end(compressedBuffer);
             });
 

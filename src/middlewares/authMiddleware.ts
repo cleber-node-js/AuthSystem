@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
  * Interface estendida para incluir dados do token no request
  */
 export interface CustomRequest extends Request {
-  userId?: string;
+  user_id?: string;
   userRole?: string;
   establishmentId?: number;
 }
@@ -32,9 +32,9 @@ export const authMiddleware = async (req: CustomRequest, res: Response, next: Ne
 
   try {
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; role: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { user_id: number; role: string };
 
-    req.userId = decoded.userId.toString();
+    req.user_id = decoded.user_id.toString();
     req.userRole = decoded.role;
 
     console.log("✅ Usuário autenticado:", decoded);
@@ -65,7 +65,7 @@ export const authenticateOwner = async (req: CustomRequest, res: Response, next:
       return res.status(404).json({ message: 'Estabelecimento não encontrado.' });
     }
 
-    if (establishment.primaryOwner_id !== Number(req.userId)) {
+    if (establishment.primaryOwner_id !== Number(req.user_id)) {
       return res.status(403).json({ message: 'Você não tem permissão para modificar este estabelecimento.' });
     }
 

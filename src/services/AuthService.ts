@@ -115,7 +115,7 @@ switch (role) {
     }
 
     const token = jwt.sign(
-      { userId: user.id, role: user.roles[0].role.name },
+      { user_id: user.id, role: user.roles[0].role.name },
       JWT_SECRET,
       { expiresIn: "1h" }
     );

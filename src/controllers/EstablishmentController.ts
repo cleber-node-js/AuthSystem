@@ -7,30 +7,34 @@ import cloudinary from '../utils/cloudinary';
 import type { UploadApiResponse } from 'cloudinary';
 import { resolve } from 'path';
 import { arrayBuffer } from 'stream/consumers';
+import { error } from 'console';
 
 const establishmentService = new EstablishmentService();
 
 export class EstablishmentController {
   // ✅ Criar estabelecimento com imagem e novos campos
   async create(req: CustomRequest, res: Response): Promise<Response> {
-    const { name, address, contact, latitude, longitude, categories, imageUrl } = req.body;
+    const { name, address, contact, latitude, longitude, categories } = req.body;
     const primaryOwner_id = req.user_id;
     const imageFile = req.file;
 
-    let parsedCategories = [];
-    if (typeof categories === 'string') {
-      try {
-        parsedCategories = JSON.parse(categories);
-      } catch (error) {
-        console.error('Erro ao fazer parse das categorias:', error);
-        parsedCategories = [];
-      }
-    }
-
+    console.log("Estou recebendo primaryOwner", primaryOwner_id)
 
     if (!primaryOwner_id) {
       return res.status(401).json({ error: "Usuário não autenticado." });
     }
+
+    let parsedCategories = Array.isArray(categories)
+      ? categories
+      : typeof categories === 'string'
+        ? (() => {
+          try {
+            return JSON.parse(categories);
+          } catch (error) {
+            console.error('Erro ao fazer parse da categorias estabelecimento', error);
+            return [];
+          }
+        })() : [];
 
     if (
       !name ||
@@ -38,11 +42,10 @@ export class EstablishmentController {
       !contact ||
       !latitude ||
       !longitude ||
-      !parsedCategories.length ||
-      !primaryOwner_id
+      !parsedCategories.length
     ) {
       return res.status(400).json({
-        error: 'Nome, endereço, contato, latitude, longitude, categorias e ID do proprietário são obrigatórios.',
+        error: 'Nome, endereço, contato, latitude, longitude, categorias são obrigatórios.',
       });
     }
 
@@ -51,9 +54,19 @@ export class EstablishmentController {
       return res.status(400).json({ error: 'Imagem obrigatória.' });
     }
 
+
+    const existingEstablishment = await establishmentService.getEstablishmentByOwnerId(Number(primaryOwner_id))
+
+    if (existingEstablishment && existingEstablishment.imageUrl) {
+      return res.status(400).json({
+        error: "Já existe uma imagem cadastrada para este estabelecimento."
+      })
+    }
+
+    console.log("Exist estabelecimento", existingEstablishment)
+
     try {
-      const arrayBuffer = await fs.promises.readFile(imageFile.path)
-      const buffer = new Uint8Array(arrayBuffer);
+      const buffer = await fs.promises.readFile(imageFile.path)
       const compressedBuffer = await sharp(buffer)
         .resize(800, 800, { fit: 'inside' })
         .webp({ quality: 80 })
@@ -65,13 +78,12 @@ export class EstablishmentController {
           function (error, result) {
             if (error) {
               console.error('Erro ao fazer upload para o Cloudinary:', error);
-              reject(error);
-            } else {
-              if (result) {
-                resolve(result);
-              }
-              reject(new Error('Erro ao fazer upload da imagem.'));
+              return reject(error);
             }
+            if (!result) {
+              return reject(new Error('Erro ao fazer upload da image.'))
+            }
+            resolve(result)
           }
         ).end(compressedBuffer);
       })
@@ -240,11 +252,11 @@ export class EstablishmentController {
         return res.status(403).json({ error: 'Você não tem permissão para excluir este estabelecimento.' });
       }
 
-      if(establishment.imageUrl) {
+      if (establishment.imageUrl) {
         const match = establishment.imageUrl.match(/\/upload\/v\d+\/establishments\/(.+)\.webp/);
         const public_id = match ? match[1] : null;
 
-        if(public_id) {
+        if (public_id) {
           await cloudinary.uploader.destroy(`establishments/${public_id}`);
           console.log('🧹 Imagem excluída do Cloudinary:', public_id);
         } else {

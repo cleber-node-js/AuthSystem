@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 // Interface para adicionar informações do usuário ao Request
 export interface CustomRequest extends Request {
-  userId?: string;
+  user_id?: string;
   userRole?: string;
 }
 
@@ -26,13 +26,13 @@ export const checkPermission = (requiredRoles: string[]) => {
 
     try {
       // 🔍 Decodifica o token JWT
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; role: string };
-      req.userId = decoded.userId.toString();
+      const decoded = jwt.verify(token, JWT_SECRET) as { user_id: number; role: string };
+      req.user_id = decoded.user_id.toString();
       req.userRole = decoded.role;
 
       // 🔍 Busca o usuário no banco de dados
       const user = await prisma.user.findUnique({
-        where: { id: Number(req.userId) },
+        where: { id: Number(req.user_id) },
         include: { roles: { include: { role: true } } },
       });
 
@@ -48,7 +48,7 @@ export const checkPermission = (requiredRoles: string[]) => {
         return res.status(403).json({ message: 'Acesso negado! Permissão insuficiente.' });
       }
 
-      console.log(`✅ Acesso autorizado para usuário ${req.userId} (${req.userRole})`);
+      console.log(`✅ Acesso autorizado para usuário ${req.user_id} (${req.userRole})`);
       return next();
     } catch (error) {
       console.error(`❌ Erro na validação do token:`, error);

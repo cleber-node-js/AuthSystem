@@ -14,14 +14,18 @@ export class EventService {
     latitude: number;
     longitude: number;
     establishment_id: number;
-    categories: string[];
+    categories: string;
     artists: number[];
   }): Promise<Event> {
+
+    const categoryName = eventData.categories
+      .split(',')
+      .map(c => c.trim())
 
     const categoryEntities = await prisma.category.findMany({
       where: {
         name: {
-          in: eventData.categories.map(category => category.toUpperCase()),
+          in: categoryName,
         }
       }
     })
