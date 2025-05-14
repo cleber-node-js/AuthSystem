@@ -22,7 +22,7 @@ jobs:
            target: "/AuthSystem"
 
        - name: "Build da aplicacao"
-         uses: aplleboy/ssh-action@v1.0.3
+         uses: appleboy/ssh-action@v1.0.3
          with:
              host: ${{ secrets.HOST }}
              username: ${{ secrets.USERNAME }}
