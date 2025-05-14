@@ -8,27 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-       - name: "Baixar o código"
-         uses: actions/checkout@v4
-
-       - name: "Copiar arquivos para VPS"
-         uses: appleboy/scp-action@v0.1.7
-         with:
-           host: ${{ secrets.HOST }}
-           username:  ${{ secrets.USERNAME }}
-           key: ${{ secrets.SSH_PRIVATE_KEY }}
-           port: ${{ secrets.PORT }}
-           source: "."
-           target: "/AuthSystem"
-
-       - name: "Build da aplicacao"
+       - name: "Commands to update in VPS"
          uses: appleboy/ssh-action@v1.0.3
          with:
              host: ${{ secrets.HOST }}
              username: ${{ secrets.USERNAME }}
-             key: ${{ secrets.SSH_PRIVATE_KEY }}
+             password: ${{ secrets.PASSWORD }}
              script:  |
-               cd /AuthSystem
-               docker-compose down
-               docker-compose up -d --build
-               docker-compose exec app npx prisma migrate deploy
+               cd /root/AuthSystem
+               git pull
+               npm i
+               pm2 update
